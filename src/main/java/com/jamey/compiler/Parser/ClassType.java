@@ -1,5 +1,5 @@
 package com.jamey.compiler.Parser;
 
-public record ClassType() implements Type{
+public record ClassType(String name) implements Type{
     
 }
