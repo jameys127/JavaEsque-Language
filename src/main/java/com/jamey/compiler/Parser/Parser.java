@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.jamey.compiler.Lexer.*;
+import com.jamey.compiler.Parser.MethodCallExp.MethodCall;
 
 public class Parser {
     private final ArrayList<Token> tokens;
@@ -72,9 +73,55 @@ public class Parser {
         }
 
     }
+    public ParseResult<Exp> callExp(final int position) throws ParserException{
+        ParseResult<Exp> e = primaryExp(position);
+        if(e.position < tokens.size() && getToken(e.position).equals(new DotToken())){
+            int pos = e.position + 1;
+            List<MethodCall> methods = new ArrayList<>(); 
+            boolean shouldrun = true;
+            while(shouldrun){
+                List<Exp> exps = new ArrayList<>();
+                Token other = getToken(pos);
+                pos++;
+                if(other instanceof IdentifierToken id){
+                    assertTokenIs(pos, new LParenToken());
+                    pos++;
+                    if(!(getToken(pos) instanceof RParenToken)){
+                        ParseResult<Exp> d = exp(pos);
+                        exps.add(d.result);
+                        pos = d.position;
+                        while(getToken(pos) instanceof CommaToken){
+                            ParseResult<Exp> f = exp(pos + 1);
+                            exps.add(f.result);
+                            pos = f.position;
+                        }
+                        assertTokenIs(pos, new RParenToken());
+                    }
+                    pos++;
+                    MethodCall dummyMethod = new MethodCall(id.name(), exps);
+                    methods.add(dummyMethod);
+                }else{
+                    throw new ParserException("Expected Identifier Token; Received: " + other.toString());
+                }
+                try{
+                    Token maybeDot = getToken(pos);
+                    if(maybeDot.equals(new DotToken())){
+                        pos++;
+                    }else{
+                        shouldrun = false;
+                    }
+                }catch (ParserException error){
+                    shouldrun = false;
+                }
+            }
+            return new ParseResult<Exp>(new MethodCallExp(e.result, methods), pos);
+        }
+        return new ParseResult<Exp>(e.result, e.position);
+    }
+
 
     public ParseResult<Exp> multExp(final int position) throws ParserException{
-        return primaryExp(position);
+        return callExp(position);
     }
     public ParseResult<Exp> addExp(final int position) throws ParserException{
         return multExp(position);
