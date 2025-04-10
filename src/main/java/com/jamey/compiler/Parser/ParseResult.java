@@ -8,10 +8,6 @@ public class ParseResult<A> {
         this.result = result;
         this.position = position;
     }
-    public ParseResult(final A result){
-        this.result = result;
-        this.position = 0;
-    }
 
     @Override
     public boolean equals(final Object other){
