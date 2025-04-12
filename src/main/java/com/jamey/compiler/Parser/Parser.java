@@ -166,7 +166,24 @@ public class Parser {
     public ParseResult<Stmt> stmt(final int position)throws ParserException{
         Token token = getToken(position);
         if(token instanceof IfToken){
-
+            assertTokenIs(position + 1, new LParenToken());
+            ParseResult<Exp> e = exp(position + 2);
+            assertTokenIs(e.position, new RParenToken());
+            assertTokenIs(e.position + 1, new LCurlyBraceToken());
+            ParseResult<Stmt> stmt = stmt(e.position + 2);
+            assertTokenIs(stmt.position, new RCurlyBraceToken());
+            if(getToken(stmt.position + 1) instanceof ElseToken){
+                List<Stmt> list = new ArrayList<>();
+                assertTokenIs(stmt.position + 2, new LCurlyBraceToken());
+                int pos = stmt.position + 3;
+                while(!(getToken(pos) instanceof RCurlyBraceToken)){
+                    ParseResult<Stmt> other = stmt(pos);
+                    list.add(other.result);
+                    pos = other.position;    
+                }
+                return new ParseResult<Stmt>(new IfStmt(e.result, stmt.result, Optional.of(list)), pos + 1);
+            }
+            return new ParseResult<Stmt>(new IfStmt(e.result, stmt.result, Optional.empty()) , stmt.position + 1);
         }else if(token instanceof WhileToken){
 
         }else if(token instanceof BreakToken){
@@ -176,12 +193,9 @@ public class Parser {
         }else{
             try{
                 ParseResult<Type> e = parseType(position);
-                if(getToken(e.position) instanceof IdentifierToken){
-                    ParseResult<Exp> d = exp(e.position);
-                    VarExp result = (VarExp)d.result;
-                    String name = result.name();
-                    assertTokenIs(d.position, new SemicolonToken());
-                    return new ParseResult<Stmt>(new VardecStmt(e.result, name), d.position);
+                if(getToken(e.position) instanceof IdentifierToken id){
+                    assertTokenIs(e.position + 1, new SemicolonToken());
+                    return new ParseResult<Stmt>(new VardecStmt(e.result, id.name()), e.position + 2);
                 }else{
                     throw new ParserException("Expected a Variable Identifier; Received: " + getToken(e.position));
                 }
@@ -189,7 +203,20 @@ public class Parser {
                 //nothin
             }
             try{
-                
+                if(token instanceof IdentifierToken id && getToken(position + 1) instanceof EqualsToken){
+                    ParseResult<Exp> d = exp(position + 2);
+                    assertTokenIs(d.position, new SemicolonToken());
+                    return new ParseResult<Stmt>(new AssignStmt(id.name(), d.result), d.position + 1);
+                }
+            }catch(ParserException error){
+                //more nothin
+            }
+            try{
+                ParseResult<Exp> e = exp(position);
+                assertTokenIs(e.position, new SemicolonToken());
+                return new ParseResult<Stmt>(new ExpStmt(e.result), e.position);
+            }catch(ParserException error){
+                throw new ParserException("Not a valid Statement: " + error);
             }
         }
     }
