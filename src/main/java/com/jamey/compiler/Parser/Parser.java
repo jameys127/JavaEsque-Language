@@ -1,5 +1,6 @@
 package com.jamey.compiler.Parser;
 
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -121,13 +122,76 @@ public class Parser {
 
 
     public ParseResult<Exp> multExp(final int position) throws ParserException{
-        return callExp(position);
+        ParseResult<Exp> e = callExp(position);
+        Exp result = e.result;
+        int pos = e.position;
+        while(pos < tokens.size()){
+            final Token t = getToken(pos);
+            if(t instanceof MultToken || t instanceof DivisionToken){
+                final Op op = (t instanceof MultToken) ? new MultOp() : new DivOp();
+                final ParseResult<Exp> e2 = callExp(pos + 1);
+                result = new BinaryExp(result, op, e2.result);
+                pos = e2.position;
+            }else{
+                break;
+            }
+        }
+        return new ParseResult<Exp>(result, pos);
     }
+
+
     public ParseResult<Exp> addExp(final int position) throws ParserException{
-        return multExp(position);
+        ParseResult<Exp> e = multExp(position);
+        Exp result = e.result;
+        int pos = e.position;
+        while(pos < tokens.size()){
+            final Token t = getToken(pos);
+            if(t instanceof AddToken || t instanceof MinusToken){
+                final Op op = (t instanceof AddToken) ? new PlusOp() : new MinusOp();
+                final ParseResult<Exp> e2 = multExp(pos + 1);
+                result = new BinaryExp(result, op, e2.result);
+                pos = e2.position;
+            }else{
+                break;
+            }
+        }
+        return new ParseResult<Exp>(result, pos);
     }
+
+
     public ParseResult<Exp> exp(final int position)throws ParserException{
         return addExp(position);
+    }
+
+    public ParseResult<Stmt> stmt(final int position)throws ParserException{
+        Token token = getToken(position);
+        if(token instanceof IfToken){
+
+        }else if(token instanceof WhileToken){
+
+        }else if(token instanceof BreakToken){
+
+        }else if(token instanceof ReturnToken){
+
+        }else{
+            try{
+                ParseResult<Type> e = parseType(position);
+                if(getToken(e.position) instanceof IdentifierToken){
+                    ParseResult<Exp> d = exp(e.position);
+                    VarExp result = (VarExp)d.result;
+                    String name = result.name();
+                    assertTokenIs(d.position, new SemicolonToken());
+                    return new ParseResult<Stmt>(new VardecStmt(e.result, name), d.position);
+                }else{
+                    throw new ParserException("Expected a Variable Identifier; Received: " + getToken(e.position));
+                }
+            }catch (ParserException error){
+                //nothin
+            }
+            try{
+                
+            }
+        }
     }
 
     public ParseResult<Type> parseType(final int position) throws ParserException{
