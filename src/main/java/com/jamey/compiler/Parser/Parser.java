@@ -372,10 +372,14 @@ public class Parser {
             assertTokenIs(pos, new LCurlyBraceToken());
             pos++;
             while(!(getToken(pos) instanceof InitToken)){
-                ParseResult<Stmt> stmt = stmt(pos);
-                VardecStmt x = (VardecStmt)stmt.result;
-                vardecList.add(x);
-                pos = stmt.position;
+                try{
+                    ParseResult<Stmt> stmt = stmt(pos);
+                    VardecStmt x = (VardecStmt)stmt.result;
+                    vardecList.add(x);
+                    pos = stmt.position;
+                } catch(ParserException e){
+                    throw new ParserException("Statement is not a Variable Decleration; " + e.getMessage());
+                }
             }
             ParseResult<Constructor> constructor = parseConstructor(pos);
             pos = constructor.position;
@@ -387,6 +391,54 @@ public class Parser {
             return new ParseResult<ClassDef>(new ClassDef(name, extend, vardecList, constructor.result, methodList), pos + 1);
         }else{
             throw new ParserException("Expected an Identifier for the classname; Received: " + getToken(position + 1).toString());
+        }
+    }
+
+    public ParseResult<Program> parseProgram(final int position) throws ParserException{
+        List<ClassDef> classdefs = new ArrayList<>();
+        List<Stmt> stmts = new ArrayList<>();
+        if(position >= tokens.size()){
+            return new ParseResult<Program>(new Program(classdefs, stmts), position);
+        }
+        int pos = position;
+        // Try to parse classes first
+        while(pos < tokens.size()) {
+            try {
+                if(getToken(pos) instanceof ClassToken) {
+                    ParseResult<ClassDef> classResult = parseClassDef(pos);
+                    classdefs.add(classResult.result);
+                    pos = classResult.position;
+                } else {
+                    break;
+                }
+            } catch (ParserException e) {
+                break;
+            }
+        }
+        
+        // Now parse statements
+        while(pos < tokens.size()) {
+            try {
+                ParseResult<Stmt> stmtResult = stmt(pos);
+                stmts.add(stmtResult.result);
+                pos = stmtResult.position;
+            } catch (ParserException e) {
+                throw new ParserException("Invalid statement at position " + pos + ": " + e.getMessage());
+            }
+        }
+
+        if(stmts.isEmpty()){
+            throw new ParserException("There needs to be atleast one statement in the program");
+        }
+        return new ParseResult<Program>(new Program(classdefs, stmts), pos);
+    }
+
+    public Program parseWholeProgram() throws ParserException{
+        final ParseResult<Program> p = parseProgram(0);
+        if(p.position ==tokens.size()){
+            return p.result;
+        } else {
+            throw new ParserException("Invalid token at position: " + p.position);
         }
     }
 
