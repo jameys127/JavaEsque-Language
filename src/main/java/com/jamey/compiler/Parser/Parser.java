@@ -1,6 +1,5 @@
 package com.jamey.compiler.Parser;
 
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -251,7 +250,8 @@ public class Parser {
 
     public ParseResult<MethodDef> parseMethodDef(final int position) throws ParserException{
         assertTokenIs(position, new MethodToken());
-        if(getToken(position + 1) instanceof IdentifierToken id){
+        Token token = getToken(position + 1);
+        if(token instanceof IdentifierToken id){
             String name = id.name();
             assertTokenIs(position + 2, new LParenToken());
             int pos = position + 3;
@@ -269,9 +269,15 @@ public class Parser {
             ParseResult<Type> type = parseType(pos + 1);
             assertTokenIs(pos + 2, new LCurlyBraceToken());
             pos += 3;
+            List<Stmt> stmtList = new ArrayList<>();
             while(!(getToken(pos) instanceof RCurlyBraceToken)){
-                
+                ParseResult<Stmt> stmt = stmt(pos);
+                stmtList.add(stmt.result);
+                pos = stmt.position;
             }
+            return new ParseResult<MethodDef>(new MethodDef(name, vardecStmts, type.result, stmtList), pos + 1);
+        }else{
+            throw new ParserException("Expected method Identifier Token; Received: " + token.toString());
         }
     }
 
