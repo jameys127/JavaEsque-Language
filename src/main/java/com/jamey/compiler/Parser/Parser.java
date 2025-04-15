@@ -353,6 +353,43 @@ public class Parser {
         return new ParseResult<Constructor>(new Constructor(vardecStmts, Optional.empty(), stmtList), pos + 1);
     }
 
+    public ParseResult<ClassDef> parseClassDef(final int position) throws ParserException{
+        String name;
+        Optional<String> extend = Optional.empty();
+        List<VardecStmt> vardecList = new ArrayList<>();
+        List<MethodDef> methodList = new ArrayList<>();
+        
+        assertTokenIs(position, new ClassToken());
+        if(getToken(position + 1) instanceof IdentifierToken id){
+            int pos = position + 2;
+            name = id.name();
+            if(getToken(pos) instanceof ExtendsToken){
+                if(getToken(pos + 1) instanceof IdentifierToken t){
+                    extend = Optional.of(t.name());
+                    pos += 2;
+                }
+            }
+            assertTokenIs(pos, new LCurlyBraceToken());
+            pos++;
+            while(!(getToken(pos) instanceof InitToken)){
+                ParseResult<Stmt> stmt = stmt(pos);
+                VardecStmt x = (VardecStmt)stmt.result;
+                vardecList.add(x);
+                pos = stmt.position;
+            }
+            ParseResult<Constructor> constructor = parseConstructor(pos);
+            pos = constructor.position;
+            while(!(getToken(pos) instanceof RCurlyBraceToken)){
+                ParseResult<MethodDef> method = parseMethodDef(pos);
+                methodList.add(method.result);
+                pos = method.position;
+            }
+            return new ParseResult<ClassDef>(new ClassDef(name, extend, vardecList, constructor.result, methodList), pos + 1);
+        }else{
+            throw new ParserException("Expected an Identifier for the classname; Received: " + getToken(position + 1).toString());
+        }
+    }
+
     public ParseResult<Type> parseType(final int position) throws ParserException{
         final Token token = getToken(position);
         if(token instanceof IntToken){

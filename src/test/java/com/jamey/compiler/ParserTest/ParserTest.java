@@ -103,12 +103,10 @@ public class ParserTest {
 
     @Test
     public void testIfStatement() throws TokenizerException, ParserException {
-        // Test an if statement with both then and else blocks
         Tokenizer tokenizer = new Tokenizer("if (x) { y = 5; } else { z = 10; }");
         ArrayList<Token> tokens = tokenizer.tokenize();
         Parser parser = new Parser(tokens);
         
-        // Build the expected AST
         VarExp conditionExp = new VarExp("x");
         
         List<Stmt> thenBlock = new ArrayList<>();
@@ -119,7 +117,6 @@ public class ParserTest {
         
         IfStmt expectedIfStmt = new IfStmt(conditionExp, thenBlock, Optional.of(elseBlock));
         
-        // Parse and compare
         ParseResult<Stmt> result = parser.stmt(0);
         assertEquals(expectedIfStmt, result.result);
         assertEquals(tokens.size(), result.position);
@@ -162,12 +159,10 @@ public class ParserTest {
 
     @Test
     public void testConstructorWithSuper() throws TokenizerException, ParserException {
-        // Test a constructor with parameters and a super call
         Tokenizer tokenizer = new Tokenizer("init() { super(y, true); d = e + 1; println(d); }");
         ArrayList<Token> tokens = tokenizer.tokenize();
         Parser parser = new Parser(tokens);
         
-        // Build the expected AST
         List<VardecStmt> params = new ArrayList<>();
         
         List<Exp> superArgs = new ArrayList<>();
@@ -186,9 +181,50 @@ public class ParserTest {
         
         Constructor expectedConstructor = new Constructor(params, Optional.of(superArgs), body);
         
-        // Parse and compare
         ParseResult<Constructor> result = parser.parseConstructor(0);
         assertEquals(expectedConstructor, result.result);
         assertEquals(tokens.size(), result.position);
+    }
+
+    @Test
+    public void testClassDef() throws TokenizerException, ParserException{
+        String input = """
+                class Something{
+                    int y;
+                    init(){}
+                    method stuff() void {println(x);}
+                    method otherstuff() void {x = 2 + 2;}
+                }
+                """;
+        Tokenizer tokenizer = new Tokenizer(input);
+        ArrayList<Token> tokens = tokenizer.tokenize();
+        Parser parser = new Parser(tokens);
+        ParseResult<ClassDef> result = parser.parseClassDef(0);
+
+        List<VardecStmt> vardecs = new ArrayList<>();
+        VardecStmt vardec = new VardecStmt(new IntType(), "y");
+        vardecs.add(vardec);
+
+        List<VardecStmt> vardeclist = new ArrayList<>();
+        List<Stmt> stmtlist = new ArrayList<>();
+        Constructor constructor = new Constructor(vardeclist, Optional.empty(), stmtlist);
+
+        List<MethodDef> methods = new ArrayList<>();
+        List<Stmt> methodStmts = new ArrayList<>();
+        Stmt printstmt = new ExpStmt(new PrintlnExp(new VarExp("x")));
+        methodStmts.add(printstmt);
+        MethodDef method = new MethodDef("stuff", vardeclist, new VoidType(), methodStmts);
+        methods.add(method);
+
+        Stmt assignStmt = new AssignStmt("x", new BinaryExp(new IntExp(2), new PlusOp(), new IntExp(2)));
+        List<Stmt> othermethodstmts = new ArrayList<>();
+        othermethodstmts.add(assignStmt);
+        MethodDef othermethod = new MethodDef("otherstuff", vardeclist, new VoidType(), othermethodstmts);
+        methods.add(othermethod);
+
+        ClassDef expected = new ClassDef("Something", Optional.empty(), vardecs, constructor, methods);
+
+        assertEquals(expected, result.result);
+        
     }
 }
