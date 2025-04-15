@@ -89,4 +89,28 @@ public class ParserTest {
 
         assertEquals(exp.result, parser.exp(0).result);
     }
+
+    @Test
+    public void testIfStatement() throws TokenizerException, ParserException {
+        // Test an if statement with both then and else blocks
+        Tokenizer tokenizer = new Tokenizer("if (x) { y = 5; } else { z = 10; }");
+        ArrayList<Token> tokens = tokenizer.tokenize();
+        Parser parser = new Parser(tokens);
+        
+        // Build the expected AST
+        VarExp conditionExp = new VarExp("x");
+        
+        List<Stmt> thenBlock = new ArrayList<>();
+        thenBlock.add(new AssignStmt("y", new IntExp(5)));
+        
+        List<Stmt> elseBlock = new ArrayList<>();
+        elseBlock.add(new AssignStmt("z", new IntExp(10)));
+        
+        IfStmt expectedIfStmt = new IfStmt(conditionExp, thenBlock, Optional.of(elseBlock));
+        
+        // Parse and compare
+        ParseResult<Stmt> result = parser.stmt(0);
+        assertEquals(expectedIfStmt, result.result);
+        assertEquals(tokens.size(), result.position);
+    }
 }

@@ -1,5 +1,7 @@
 package com.jamey.compiler.Parser;
 
-public record ReturnStmt(Exp e) implements Stmt{
+import java.util.Optional;
+
+public record ReturnStmt(Optional<Exp> e) implements Stmt{
     
 }

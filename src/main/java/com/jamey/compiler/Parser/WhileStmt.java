@@ -1,5 +1,7 @@
 package com.jamey.compiler.Parser;
 
-public record WhileStmt(Exp e, Stmt stmt) implements Stmt{
+import java.util.List;
+
+public record WhileStmt(Exp e, List<Stmt> stmt) implements Stmt{
     
 }

@@ -166,30 +166,58 @@ public class Parser {
     public ParseResult<Stmt> stmt(final int position)throws ParserException{
         Token token = getToken(position);
         if(token instanceof IfToken){
+            List<Stmt> stmtList = new ArrayList<>();
             assertTokenIs(position + 1, new LParenToken());
             ParseResult<Exp> e = exp(position + 2);
             assertTokenIs(e.position, new RParenToken());
             assertTokenIs(e.position + 1, new LCurlyBraceToken());
-            ParseResult<Stmt> stmt = stmt(e.position + 2);
-            assertTokenIs(stmt.position, new RCurlyBraceToken());
-            if(getToken(stmt.position + 1) instanceof ElseToken){
+            int pos = e.position + 2;
+            while(true){
+                ParseResult<Stmt> stmt = stmt(pos);
+                stmtList.add(stmt.result);
+                pos = stmt.position;
+                if(getToken(pos) instanceof RCurlyBraceToken){
+                    break;
+                }
+            }
+            if(getToken(pos + 1) instanceof ElseToken){
                 List<Stmt> list = new ArrayList<>();
-                assertTokenIs(stmt.position + 2, new LCurlyBraceToken());
-                int pos = stmt.position + 3;
+                assertTokenIs(pos + 2, new LCurlyBraceToken());
+                pos += 3;
                 while(!(getToken(pos) instanceof RCurlyBraceToken)){
                     ParseResult<Stmt> other = stmt(pos);
                     list.add(other.result);
                     pos = other.position;    
                 }
-                return new ParseResult<Stmt>(new IfStmt(e.result, stmt.result, Optional.of(list)), pos + 1);
+                return new ParseResult<Stmt>(new IfStmt(e.result, stmtList, Optional.of(list)), pos + 1);
             }
-            return new ParseResult<Stmt>(new IfStmt(e.result, stmt.result, Optional.empty()) , stmt.position + 1);
+            return new ParseResult<Stmt>(new IfStmt(e.result, stmtList, Optional.empty()) , pos + 1);
         }else if(token instanceof WhileToken){
-
+            assertTokenIs(position + 1, new LParenToken());
+            ParseResult<Exp> condition = exp(position + 2);
+            assertTokenIs(condition.position, new RParenToken());
+            assertTokenIs(condition.position + 1, new LCurlyBraceToken());
+            int pos = condition.position + 2;
+            List<Stmt> block = new ArrayList<>();
+            while(true){
+                ParseResult<Stmt> body = stmt(pos);
+                block.add(body.result);
+                pos = body.position;
+                if(getToken(pos) instanceof RCurlyBraceToken){
+                    break;
+                }
+            }
+            return new ParseResult<Stmt>(new WhileStmt(condition.result, block), pos + 1);
         }else if(token instanceof BreakToken){
-
+            assertTokenIs(position + 1, new SemicolonToken());
+            return new ParseResult<Stmt>(new BreakStmt(), position + 2);
         }else if(token instanceof ReturnToken){
-
+            if(!(getToken(position + 1) instanceof SemicolonToken)){
+                ParseResult<Exp> exp = exp(position + 1);
+                assertTokenIs(exp.position, new SemicolonToken());
+                return new ParseResult<Stmt>(new ReturnStmt(Optional.of(exp.result)), exp.position + 1);
+            }
+            return new ParseResult<Stmt>(new ReturnStmt(Optional.empty()), position + 2);
         }else{
             try{
                 ParseResult<Type> e = parseType(position);
@@ -217,6 +245,32 @@ public class Parser {
                 return new ParseResult<Stmt>(new ExpStmt(e.result), e.position);
             }catch(ParserException error){
                 throw new ParserException("Not a valid Statement: " + error);
+            }
+        }
+    }
+
+    public ParseResult<MethodDef> parseMethodDef(final int position) throws ParserException{
+        assertTokenIs(position, new MethodToken());
+        if(getToken(position + 1) instanceof IdentifierToken id){
+            String name = id.name();
+            assertTokenIs(position + 2, new LParenToken());
+            int pos = position + 3;
+            List<VardecStmt> vardecStmts = new ArrayList<>();
+            while(!(getToken(pos) instanceof RParenToken)){
+                ParseResult<Stmt> dummy = stmt(pos);
+                VardecStmt vardec = (VardecStmt)dummy.result;
+                vardecStmts.add(vardec);
+                if(getToken(dummy.position) instanceof CommaToken){
+                    pos = dummy.position + 1;
+                    continue;
+                }
+                pos = dummy.position;
+            }
+            ParseResult<Type> type = parseType(pos + 1);
+            assertTokenIs(pos + 2, new LCurlyBraceToken());
+            pos += 3;
+            while(!(getToken(pos) instanceof RCurlyBraceToken)){
+                
             }
         }
     }
