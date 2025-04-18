@@ -249,10 +249,8 @@ public void testParseWholeProgram() throws TokenizerException, ParserException {
     Parser parser = new Parser(tokens);
     Program result = parser.parseWholeProgram();
     
-    // Build expected program structure
     List<ClassDef> expectedClasses = new ArrayList<>();
     
-    // Animal class
     List<VardecStmt> animalVardecs = new ArrayList<>();
     List<VardecStmt> emptyParams = new ArrayList<>();
     List<Stmt> emptyStmts = new ArrayList<>();
@@ -268,7 +266,6 @@ public void testParseWholeProgram() throws TokenizerException, ParserException {
     ClassDef animalClass = new ClassDef("Animal", Optional.empty(), animalVardecs, animalConstructor, animalMethods);
     expectedClasses.add(animalClass);
     
-    // Cat class
     List<VardecStmt> catVardecs = new ArrayList<>();
     List<Exp> superArgs = new ArrayList<>();
     List<Stmt> catConstructorStmts = new ArrayList<>();
@@ -284,7 +281,6 @@ public void testParseWholeProgram() throws TokenizerException, ParserException {
     ClassDef catClass = new ClassDef("Cat", Optional.of("Animal"), catVardecs, catConstructor, catMethods);
     expectedClasses.add(catClass);
     
-    // Program statements
     List<Stmt> expectedStmts = new ArrayList<>();
     expectedStmts.add(new VardecStmt(new ClassType("Animal"), "cat"));
     expectedStmts.add(new AssignStmt("cat", new NewExp(new ClassType("Cat"), Optional.empty())));
