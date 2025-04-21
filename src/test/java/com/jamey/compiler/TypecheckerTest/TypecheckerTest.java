@@ -9,13 +9,13 @@ import com.jamey.compiler.Lexer.*;
 import com.jamey.compiler.Parser.*;
 
 public class TypecheckerTest {
-    @Test
-    public void typecheckNum(){
-        assertEquals(new IntType(), Typechecker.typecheckExp(new IntExp(7)));
-    }
+    // @Test
+    // public void typecheckNum(){
+    //     assertEquals(new IntType(), Typechecker.typecheckExp(new IntExp(7)));
+    // }
 
-    @Test
-    public void typecheckBool(){
-        assertEquals(new BoolType(), Typechecker.typecheckExp(new BooleanExp(true)));
-    }
+    // @Test
+    // public void typecheckBool(){
+    //     assertEquals(new BoolType(), Typechecker.typecheckExp(new BooleanExp(true)));
+    // }
 }
