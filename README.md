@@ -1,7 +1,7 @@
 # Language Design Proposal: java-esque
 
 ## Student Name(s):
-Randy Reyes Barrios , Cesar Gonzalez, Jeremiah Sheehy, Aleksei Alvarez
+Jeremiah Sheehy
 
 ## Language Name:
 Java-esque
@@ -10,7 +10,7 @@ Java-esque
 Javascript
 
 ## Language Description:
-(Pathetic) object-oriented programming.  The goal is for us to better understand how object-oriented programming languages work.  We want to implement a Java-like language with classes and subclasses.  Unlike pOOP base, this version effectively cheats and compiles to JavaScript, and has a much more intuitive syntax.
+(Pathetic) object-oriented programming.  The goal is for me to better understand how object-oriented programming languages work.  I want to implement a Java-like language with classes and subclasses. This is my solo attempt at a school team project that I did for my last semester in class. I want to attempt to add things that are missing in the original like string literals and maybe some other added bits and bobs. It compiles to javascript.
 
 ## Key Features:
 Objects + methods with class-based inheritance, subtyping, checking if a variable is initialized before use, checking if void is used as a value, checking that a function returning non-void always returns, non-S-expression-based syntax.
