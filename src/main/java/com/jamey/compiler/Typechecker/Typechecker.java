@@ -1,11 +1,13 @@
 package com.jamey.compiler.Typechecker;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 import com.jamey.compiler.Parser.*;
+import com.jamey.compiler.Parser.MethodCallExp.MethodCall;
 
 public class Typechecker {
 
@@ -141,8 +143,23 @@ public class Typechecker {
             throw new TypecheckerErrorException("Calling a method on object that isn't a class");
         }
         ClassType objectAsClassType = (ClassType)objectType;
-        exp.
-        return null;
+        List<MethodCall> listOfCalls = exp.methodCalls();
+        ClassDef actualClass = lookupClass(objectAsClassType.name());
+
+        MethodDef matchingMethod = null;
+        for(MethodCall methods : listOfCalls){
+            String methodname = methods.name();
+            List<Exp> arguments = methods.exps();
+            
+            for(MethodDef defs : actualClass.methoddef){
+                if(methodname.equals(defs.methodname)){
+                    for(int i = 0; i < defs.vars.size(); i++){
+                        List<Type> args = exp
+                    }
+                }
+            }
+        }
+        
      }
 
     public static void assertTypesEqual(final Type expected, final Type received) throws TypecheckerErrorException{
