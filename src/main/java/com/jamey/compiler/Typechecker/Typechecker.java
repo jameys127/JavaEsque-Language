@@ -1,11 +1,24 @@
 package com.jamey.compiler.Typechecker;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import com.jamey.compiler.Parser.*;
 
 public class Typechecker {
+
+    private static Map<String, ClassDef> classDefinitions = new HashMap<>();
+
+    public static void putClassInMap(final String classname, final ClassDef classdef){
+        classDefinitions.put(classname, classdef);
+    }
+    public static ClassDef lookupClass(final String classname){
+        return classDefinitions.get(classname);
+    }
+
+
 
     public static Map<Variable, Type> addToMap(final Map<Variable, Type> typeEnv,
                                                final Variable variable,
@@ -29,7 +42,7 @@ public class Typechecker {
             right instanceof IntType){
             return new IntType();
         }else{
-            throw new TypecheckerErrorException("No such binary operator recognized: " + exp.op().toString());
+            throw new TypecheckerErrorException("No such binary operation recognized");
         }
     }
     /*
@@ -38,9 +51,9 @@ public class Typechecker {
      * IntExp - done
      * MethodCallExp
      * NewExp
-     * ParenExp
-     * PrintlnExp
-     * StrExp
+     * ParenExp - done
+     * PrintlnExp - done
+     * StrExp -currently never used in the language
      * ThisExp
      */
     public static Type typecheckExp(final Exp exp, 
@@ -59,7 +72,45 @@ public class Typechecker {
             }
         }else if(exp instanceof BinaryExp){
             return typecheckBin((BinaryExp)exp, typeEnv);
-        }else{
+        }else if(exp instanceof ParenExp){
+            ParenExp paren = (ParenExp)exp;
+            return typecheckExp(paren.e(), typeEnv);
+        }else if(exp instanceof PrintlnExp){
+            /*
+             * Might need to change this depending on what I can print
+             */
+            PrintlnExp print = (PrintlnExp)exp;
+            return typecheckExp(print.e(), typeEnv);
+        }else if(exp instanceof NewExp){
+            NewExp newExp = (NewExp)exp;
+            String classname = newExp.type().name();
+            ClassDef classDef = lookupClass(classname);
+            if(classDef == null){
+                throw new TypecheckerErrorException("No such class '" + classname + "' exists");
+            }
+            Optional<List<Exp>> args = newExp.exps();
+            if(args.isPresent()){
+                List<Exp> argList = args.get();
+                List<VardecStmt> constructorVardecs = classDef.constructor.vardecs;
+                if(argList.size() != constructorVardecs.size()){
+                    throw new TypecheckerErrorException("Wrong number of arguments for constructor of '" + classname + "'");
+                }
+                for(int i = 0; i < constructorVardecs.size(); i++){
+                    Type arg = typecheckExp(argList.get(i), typeEnv);
+                    Type conVar = constructorVardecs.get(i).type();
+                    if(!conVar.equals(arg)){
+                        throw new TypecheckerErrorException("Initializing argument doesn't match type in the constructor");
+                    }
+                }
+            }else{
+                List<VardecStmt> constructorVardecs = classDef.constructor.vardecs;
+                if(!constructorVardecs.isEmpty()){
+                    throw new TypecheckerErrorException("Class constructor for '" + classname + "' requires arguments");
+                }
+            }
+            return newExp.type();
+        }
+        else{
             assert(false);
             throw new TypecheckerErrorException("Unrecognized expression: " + exp.toString());
         }
@@ -100,7 +151,17 @@ public class Typechecker {
             throw new TypecheckerErrorException("Variable not in scope: " + stmt.name());
         }
     }
-
+    
+    /*
+     * ExpStmt - done
+     * VardecStmt - done
+     * AssignStmt - done
+     * WhileStmt - done
+     * BreakStmt
+     * ReturnStmt
+     * IfStmt
+     * 
+     */
     public static Map<Variable, Type> typecheckStmt(final Stmt stmt,
                                     final Map<Variable, Type> typeEnv)
                                     throws TypecheckerErrorException{
@@ -110,7 +171,12 @@ public class Typechecker {
             return typecheckWhile((WhileStmt)stmt, typeEnv);
         }else if(stmt instanceof AssignStmt){
             return typecheckAssign((AssignStmt)stmt, typeEnv);
-        }else {
+        }else if(stmt instanceof ExpStmt){
+            ExpStmt expstmt = (ExpStmt)stmt;
+            typecheckExp(expstmt.e(), typeEnv);
+            return typeEnv;
+        }
+        else {
             throw new TypecheckerErrorException("Unrecognized Statement: " + stmt.toString());
         }
     }
