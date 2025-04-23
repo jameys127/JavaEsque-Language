@@ -1,6 +1,5 @@
 package com.jamey.compiler.Typechecker;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -146,19 +145,39 @@ public class Typechecker {
         List<MethodCall> listOfCalls = exp.methodCalls();
         ClassDef actualClass = lookupClass(objectAsClassType.name());
 
-        MethodDef matchingMethod = null;
         for(MethodCall methods : listOfCalls){
             String methodname = methods.name();
             List<Exp> arguments = methods.exps();
+            MethodDef matchingMethod = null;
             
             for(MethodDef defs : actualClass.methoddef){
                 if(methodname.equals(defs.methodname)){
-                    for(int i = 0; i < defs.vars.size(); i++){
-                        List<Type> args = exp
+                    if(arguments.size() != defs.vars.size()){
+                        throw new TypecheckerErrorException("Method '" + defs.methodname + "' expects "
+                        + defs.vars.size() + " arguments; Got: " + arguments.size());
                     }
+                    for(int i = 0; i < defs.vars.size(); i++){
+                        Type argType = typecheckExp(arguments.get(i), typeEnv, inClass);
+                        Type paramType = defs.vars.get(i).type();
+                        if(!argType.equals(paramType)){
+                            throw new TypecheckerErrorException("Arguments provided don't match required arguments in: " + defs.methodname);
+                        }
+                    }
+                    matchingMethod = defs;
+                    break;
                 }
             }
+            if(matchingMethod == null){
+                throw new TypecheckerErrorException("Method '" + methodname + 
+                "' is not a valid method for object '" + objectAsClassType.toString() + "'");
+            }
+            objectType = matchingMethod.type;
+            if(objectType instanceof ClassType){
+                objectAsClassType = (ClassType)objectType;
+                actualClass = lookupClass(objectAsClassType.name());
+            }
         }
+        return objectType;
         
      }
 
@@ -233,9 +252,9 @@ public class Typechecker {
     //for now this only checks the stmts and not all of the class definitions
     public static void typecheckProgram(final Program program) throws TypecheckerErrorException{
 
-        Map<Variable, Type> typeEnv = new HashMap<Variable, Type>();
-        for(final Stmt stmt : program.stmts){
-            typeEnv = typecheckStmt(stmt, typeEnv);
-        }
+        // Map<Variable, Type> typeEnv = new HashMap<Variable, Type>();
+        // for(final Stmt stmt : program.stmts){
+        //     typeEnv = typecheckStmt(stmt, typeEnv);
+        // }
     }
 }
