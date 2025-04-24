@@ -35,8 +35,8 @@ public class TypecheckerTest {
         Stmt assign = new AssignStmt("x", new IntExp(5));
         Map<Variable, Type> map = new HashMap<Variable, Type>();
         map.put(new Variable("x"), new IntType());
-        Map<Variable, Type> env = Typechecker.typecheckStmt(stmt, typeEnv, Optional.empty());
-        env = Typechecker.typecheckStmt(assign, env, Optional.empty());
+        Map<Variable, Type> env = Typechecker.typecheckStmt(stmt, typeEnv, Optional.empty(), false);
+        env = Typechecker.typecheckStmt(assign, env, Optional.empty(), false);
         
         assertEquals(map, env);
     }

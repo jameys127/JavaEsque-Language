@@ -197,11 +197,13 @@ public class Typechecker {
     }
     public static Map<Variable, Type> typecheckWhile(final WhileStmt stmt,
                                                      final Map<Variable, Type> typeEnv,
-                                                     final Optional<ClassType> inClass) 
+                                                     final Optional<ClassType> inClass,
+                                                     Boolean inLoop)
                                                      throws TypecheckerErrorException {
+        inLoop = true;
         assertTypesEqual(new BoolType(), typecheckExp(stmt.e(), typeEnv, inClass));
         for(Stmt body : stmt.stmt()){
-            typecheckStmt(body, typeEnv, inClass);
+            typecheckStmt(body, typeEnv, inClass, inLoop);
         }
         return typeEnv;
     }
@@ -231,18 +233,26 @@ public class Typechecker {
      */
     public static Map<Variable, Type> typecheckStmt(final Stmt stmt,
                                     final Map<Variable, Type> typeEnv,
-                                    final Optional<ClassType> inClass)
+                                    final Optional<ClassType> inClass,
+                                    Boolean inLoop)
                                     throws TypecheckerErrorException{
         if(stmt instanceof VardecStmt){
             return typecheckVardec((VardecStmt)stmt, typeEnv);
         }else if(stmt instanceof WhileStmt){
-            return typecheckWhile((WhileStmt)stmt, typeEnv, inClass);
+            return typecheckWhile((WhileStmt)stmt, typeEnv, inClass, inLoop);
         }else if(stmt instanceof AssignStmt){
             return typecheckAssign((AssignStmt)stmt, typeEnv, inClass);
         }else if(stmt instanceof ExpStmt){
             ExpStmt expstmt = (ExpStmt)stmt;
             typecheckExp(expstmt.e(), typeEnv, inClass);
             return typeEnv;
+        }else if(stmt instanceof BreakStmt){
+            if(inLoop == false){
+                throw new TypecheckerErrorException("Using 'break' while not in a loop");
+            }
+            return typeEnv;
+        }else if(stmt instanceof ReturnStmt){
+            return null; //finish this one
         }
         else {
             throw new TypecheckerErrorException("Unrecognized Statement: " + stmt.toString());
