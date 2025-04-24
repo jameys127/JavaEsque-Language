@@ -198,12 +198,13 @@ public class Typechecker {
     public static Map<Variable, Type> typecheckWhile(final WhileStmt stmt,
                                                      final Map<Variable, Type> typeEnv,
                                                      final Optional<ClassType> inClass,
-                                                     Boolean inLoop)
+                                                     Boolean inLoop,
+                                                     final Optional<Type> returnType)
                                                      throws TypecheckerErrorException {
         inLoop = true;
         assertTypesEqual(new BoolType(), typecheckExp(stmt.e(), typeEnv, inClass));
         for(Stmt body : stmt.stmt()){
-            typecheckStmt(body, typeEnv, inClass, inLoop);
+            typecheckStmt(body, typeEnv, inClass, inLoop, returnType);
         }
         return typeEnv;
     }
@@ -226,20 +227,21 @@ public class Typechecker {
      * VardecStmt - done
      * AssignStmt - done
      * WhileStmt - done
-     * BreakStmt
-     * ReturnStmt
+     * BreakStmt - done
+     * ReturnStmt - done
      * IfStmt
      * 
      */
     public static Map<Variable, Type> typecheckStmt(final Stmt stmt,
                                     final Map<Variable, Type> typeEnv,
                                     final Optional<ClassType> inClass,
-                                    Boolean inLoop)
+                                    Boolean inLoop,
+                                    final Optional<Type> returnType)
                                     throws TypecheckerErrorException{
         if(stmt instanceof VardecStmt){
             return typecheckVardec((VardecStmt)stmt, typeEnv);
         }else if(stmt instanceof WhileStmt){
-            return typecheckWhile((WhileStmt)stmt, typeEnv, inClass, inLoop);
+            return typecheckWhile((WhileStmt)stmt, typeEnv, inClass, inLoop, returnType);
         }else if(stmt instanceof AssignStmt){
             return typecheckAssign((AssignStmt)stmt, typeEnv, inClass);
         }else if(stmt instanceof ExpStmt){
@@ -252,7 +254,41 @@ public class Typechecker {
             }
             return typeEnv;
         }else if(stmt instanceof ReturnStmt){
-            return null; //finish this one
+            ReturnStmt returnStmt = (ReturnStmt)stmt;
+            if(!returnType.isPresent()){
+                throw new TypecheckerErrorException("Using 'return' while not inside a method");
+            }
+            if(returnStmt.e().isPresent()){
+                Exp returnExp = returnStmt.e().get();
+                Type expType = typecheckExp(returnExp, typeEnv, inClass);
+                if(expType == returnType.get()){
+                    return typeEnv;
+                }else{
+                    throw new TypecheckerErrorException("return expression is of type '" + expType.toString()
+                    + "' when the method requires type '" + returnType.get().toString() + "'" );
+                }
+            }else{
+                if(!returnType.get().equals(new VoidType())){
+                    throw new TypecheckerErrorException("Returning 'Void' in a method that returns a non-Void type");
+                }
+                return typeEnv;
+            }
+        }else if(stmt instanceof IfStmt){
+            IfStmt ifstmt = (IfStmt)stmt;
+            Type condition = typecheckExp(ifstmt.e(), typeEnv, inClass);
+            if(!(condition.equals(new BoolType()))){
+                throw new TypecheckerErrorException("Condition in if statement must return a boolean");
+            }
+            for(Stmt body : ifstmt.stmt()){
+                typecheckStmt(body, typeEnv, inClass, inLoop, returnType);
+            }
+            if(ifstmt.elseStmt().isPresent()){
+                List<Stmt> elsebody = ifstmt.elseStmt().get();
+                for(Stmt elsestmts : elsebody){
+                    typecheckStmt(elsestmts, typeEnv, inClass, inLoop, returnType);
+                }
+            }
+            return typeEnv;
         }
         else {
             throw new TypecheckerErrorException("Unrecognized Statement: " + stmt.toString());
