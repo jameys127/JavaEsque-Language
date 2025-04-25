@@ -167,6 +167,33 @@ public class Typechecker {
                     break;
                 }
             }
+            if(actualClass.extend.isPresent()){
+                ClassDef parentClass = lookupClass(actualClass.extend.get());
+                while(true){
+                    for(MethodDef defs : parentClass.methoddef){
+                        if(methodname.equals(defs.methodname)){
+                            if(arguments.size() != defs.vars.size()){
+                                throw new TypecheckerErrorException("Method '" + defs.methodname + "' expects "
+                                + defs.vars.size() + " arguments; Got: " + arguments.size());
+                            }
+                            for(int i = 0; i < defs.vars.size(); i++){
+                                Type argType = typecheckExp(arguments.get(i), typeEnv, inClass);
+                                Type paramType = defs.vars.get(i).type();
+                                if(!argType.equals(paramType)){
+                                    throw new TypecheckerErrorException("Arguments provided don't match required arguments in: " + defs.methodname);
+                                }
+                            }
+                            matchingMethod = defs;
+                            break;
+                        }
+                    }
+                    if(parentClass.extend.isPresent()){
+                        parentClass = lookupClass(parentClass.extend.get());
+                    }else{
+                        break;
+                    }
+                }
+            }
             if(matchingMethod == null){
                 throw new TypecheckerErrorException("Method '" + methodname + 
                 "' is not a valid method for object '" + objectAsClassType.toString() + "'");
@@ -402,6 +429,9 @@ public class Typechecker {
                     }
                 }
             }
+        }
+        if(parentClass.extend.isPresent()){
+            methodOverriding(childClass, lookupClass(parentClass.extend.get()));
         }
     }
     public static boolean isSubtypeOrSameType(Type childType, Type parentType){

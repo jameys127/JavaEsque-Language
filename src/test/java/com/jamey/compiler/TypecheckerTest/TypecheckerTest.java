@@ -103,6 +103,32 @@ public class TypecheckerTest {
         Type result = Typechecker.typecheckMethodCall(methodcall, typeEnv, inClass);
         assertTrue(result instanceof IntType);
     }
+    @Test
+    public void testStmtVardec() throws TypecheckerErrorException{
+        VardecStmt vardec = new VardecStmt(new ClassType("Person"), "James");
+        Map<Variable, Type> expected = new HashMap<>();
+        expected.put(new Variable("James"), new ClassType("Person"));
+        Map<Variable, Type> result = Typechecker.typecheckStmt(vardec, typeEnv, inClass, false, Optional.empty());
+        assertEquals(expected, result);
+    }
+    @Test
+    public void testStmtAssign() throws TypecheckerErrorException{
+        VardecStmt vardec = new VardecStmt(new IntType(), "James");
+        AssignStmt assign = new AssignStmt("James", new IntExp(5));
+        Map<Variable, Type> newMap = Typechecker.typecheckStmt(vardec, typeEnv, inClass, false, Optional.empty());
+        Typechecker.typecheckStmt(assign, newMap, inClass, false, Optional.empty());
+    }
+    @Test
+    public void testStmtAssignClassObject() throws TypecheckerErrorException{
+        VardecStmt vardec = new VardecStmt(new ClassType("Person"), "James");
+        List<Exp> args = new ArrayList<>();
+        Exp exp = new IntExp(25);
+        args.add(exp);
+        AssignStmt assign = new AssignStmt("James", new NewExp(new ClassType("Person"), Optional.of(args)));
+        Typechecker.putClassInMap("Person", createPersonClass());
+        Map<Variable, Type> newMap = Typechecker.typecheckStmt(vardec, typeEnv, inClass, false, Optional.empty());
+        Typechecker.typecheckStmt(assign, newMap, inClass, false, Optional.empty());
+    }
 
     private ClassDef createPersonClass() {
         /*
