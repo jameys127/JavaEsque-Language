@@ -431,10 +431,14 @@ public class Typechecker {
 
     //for now this only checks the stmts and not all of the class definitions
     public static void typecheckProgram(final Program program) throws TypecheckerErrorException{
-
-        // Map<Variable, Type> typeEnv = new HashMap<Variable, Type>();
-        // for(final Stmt stmt : program.stmts){
-        //     typeEnv = typecheckStmt(stmt, typeEnv);
-        // }
+        for(ClassDef classes : program.classdefs){
+            putClassInMap(classes.classname, classes);
+        }
+        for(ClassDef classes : program.classdefs){
+            typecheckClassDef(classes);
+        }
+        for(Stmt stmt : program.stmts){
+            typecheckStmt(stmt, new HashMap<Variable, Type>(), Optional.empty(), false, Optional.empty());
+        }
     }
 }
