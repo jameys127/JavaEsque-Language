@@ -75,7 +75,15 @@ public class Parser {
             assertTokenIs(e.position + 1, new RParenToken());
             return new ParseResult<Exp>(e.result, e.position + 2);
         }else if(token instanceof ThisToken){
-            return new ParseResult<Exp>(new ThisExp(), position + 1);
+            if(getToken(position + 1) instanceof DotToken){
+                if(getToken(position + 2) instanceof IdentifierToken id){
+                    String name = id.name();
+                    return new ParseResult<Exp>(new ThisExp(Optional.of(name)), position + 3);
+                }else{
+                    throw new ParserException("Expected Identifier after 'this' call");
+                }
+            }
+            return new ParseResult<Exp>(new ThisExp(Optional.empty()), position + 1);
         }else if(token instanceof TrueToken){
             return new ParseResult<Exp>(new BooleanExp(true), position + 1);
         }else if(token instanceof FalseToken){
@@ -262,6 +270,7 @@ public class Parser {
             return new ParseResult<Stmt>(new ReturnStmt(Optional.empty()), position + 2);
         }else{
             try{
+                //Vardec Stmt specifically
                 ParseResult<Type> e = parseType(position);
                 if(getToken(e.position) instanceof IdentifierToken id){
                     assertTokenIs(e.position + 1, new SemicolonToken());
@@ -273,15 +282,28 @@ public class Parser {
                 //nothin
             }
             try{
+                //Assignemnt Stmt specifically with a regular identifier variable
                 if(token instanceof IdentifierToken id && getToken(position + 1) instanceof EqualsToken){
                     ParseResult<Exp> d = exp(position + 2);
                     assertTokenIs(d.position, new SemicolonToken());
-                    return new ParseResult<Stmt>(new AssignStmt(id.name(), d.result), d.position + 1);
+                    return new ParseResult<Stmt>(new AssignStmt(Optional.empty(), id.name(), d.result), d.position + 1);
                 }
             }catch(ParserException error){
                 //more nothin
+            }try{
+                //Assignemnt Stmt specifically with a this.variablename identifier
+                if(token instanceof ThisToken && getToken(position + 3) instanceof EqualsToken){
+                    ParseResult<Exp> exp = exp(position);
+                    ThisExp thisexp = (ThisExp)exp.result;
+                    ParseResult<Exp> assignExp = exp(exp.position + 1);
+                    assertTokenIs(assignExp.position, new SemicolonToken());
+                    return new ParseResult<Stmt>(new AssignStmt(Optional.of(thisexp), thisexp.parentVar().get(), assignExp.result), assignExp.position + 1);
+                }
+            }catch(ParserException error){
+                //lots of nothin
             }
             try{
+                // And finally the ExpStmt
                 ParseResult<Exp> e = exp(position);
                 assertTokenIs(e.position, new SemicolonToken());
                 return new ParseResult<Stmt>(new ExpStmt(e.result), e.position + 1);

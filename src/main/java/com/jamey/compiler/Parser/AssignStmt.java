@@ -1,5 +1,7 @@
 package com.jamey.compiler.Parser;
 
-public record AssignStmt(String name, Exp e) implements Stmt{
+import java.util.Optional;
+
+public record AssignStmt(Optional<ThisExp> thisTarget, String name, Exp e) implements Stmt{
     
 }

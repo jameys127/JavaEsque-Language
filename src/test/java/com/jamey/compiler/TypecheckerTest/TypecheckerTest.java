@@ -32,7 +32,7 @@ public class TypecheckerTest {
     @Test
     public void typecheckVardecAndAssign() throws TypecheckerErrorException{
         Stmt stmt = new VardecStmt(new IntType(), "x");
-        Stmt assign = new AssignStmt("x", new IntExp(5));
+        Stmt assign = new AssignStmt(Optional.empty(), "x", new IntExp(5));
         Map<Variable, Type> map = new HashMap<Variable, Type>();
         map.put(new Variable("x"), new IntType());
         Map<Variable, Type> env = Typechecker.typecheckStmt(stmt, typeEnv, Optional.empty(), false, Optional.empty());
@@ -114,7 +114,7 @@ public class TypecheckerTest {
     @Test
     public void testStmtAssign() throws TypecheckerErrorException{
         VardecStmt vardec = new VardecStmt(new IntType(), "James");
-        AssignStmt assign = new AssignStmt("James", new IntExp(5));
+        AssignStmt assign = new AssignStmt(Optional.empty(), "James", new IntExp(5));
         Map<Variable, Type> newMap = Typechecker.typecheckStmt(vardec, typeEnv, inClass, false, Optional.empty());
         Typechecker.typecheckStmt(assign, newMap, inClass, false, Optional.empty());
     }
@@ -124,10 +124,15 @@ public class TypecheckerTest {
         List<Exp> args = new ArrayList<>();
         Exp exp = new IntExp(25);
         args.add(exp);
-        AssignStmt assign = new AssignStmt("James", new NewExp(new ClassType("Person"), Optional.of(args)));
+        AssignStmt assign = new AssignStmt(Optional.empty(), "James", new NewExp(new ClassType("Person"), Optional.of(args)));
         Typechecker.putClassInMap("Person", createPersonClass());
         Map<Variable, Type> newMap = Typechecker.typecheckStmt(vardec, typeEnv, inClass, false, Optional.empty());
         Typechecker.typecheckStmt(assign, newMap, inClass, false, Optional.empty());
+    }
+    @Test
+    public void testTypecheckingWholeClass() throws TypecheckerErrorException{
+        ClassDef person = createPersonClass();
+        Typechecker.typecheckClassDef(person);
     }
 
     private ClassDef createPersonClass() {
@@ -148,8 +153,8 @@ public class TypecheckerTest {
         constructorParams.add(new VardecStmt(new IntType(), "age"));
         
         List<Stmt> constructorBody = new ArrayList<>();
-        //assignment statement that would be like this.age = age
-        constructorBody.add(new AssignStmt("age", new VarExp("age")));
+        //assignment statement that would be like this.age = age | Not yet functional
+        constructorBody.add(new AssignStmt(Optional.of(new ThisExp(Optional.of("age"))), "age", new VarExp("age")));
         
         Constructor constructor = new Constructor(constructorParams, Optional.empty(), constructorBody);
         
@@ -163,7 +168,7 @@ public class TypecheckerTest {
         Type intReturnType = new IntType();
         List<VardecStmt> getAgeParams = new ArrayList<>();
         List<Stmt> getAgeBody = new ArrayList<>();
-        getAgeBody.add(new ReturnStmt(Optional.of(new VarExp("age"))));
+        getAgeBody.add(new ReturnStmt(Optional.of(new ThisExp(Optional.of("age")))));
         methods.add(new MethodDef(getAgeMethod, getAgeParams, intReturnType, getAgeBody));
         
         //setAge method
@@ -172,7 +177,7 @@ public class TypecheckerTest {
         List<VardecStmt> setAgeParams = new ArrayList<>();
         setAgeParams.add(new VardecStmt(new IntType(), "newAge"));
         List<Stmt> setAgeBody = new ArrayList<>();
-        setAgeBody.add(new AssignStmt("age", new VarExp("newAge")));
+        setAgeBody.add(new AssignStmt(Optional.of(new ThisExp(Optional.of("age"))), "age", new VarExp("newAge")));
         methods.add(new MethodDef(setAgeMethod, setAgeParams, voidReturnType, setAgeBody));
         
         //add5Years method
@@ -180,7 +185,7 @@ public class TypecheckerTest {
         List<VardecStmt> add5YearsParams = new ArrayList<>();
         List<Stmt> add5YearsBody = new ArrayList<>();
         BinaryExp addingYears = new BinaryExp(
-            new VarExp("age"),
+            new ThisExp(Optional.of("age")),
             new PlusOp(),
             new IntExp(5)
         );

@@ -41,6 +41,14 @@ public class ParserTest {
         // System.out.println(parser.exp(0).result);
         assertEquals(p.result, parser.exp(0).result);
     }
+    @Test
+    public void testThisExp()throws TokenizerException, ParserException{
+        Tokenizer tokenizer = new Tokenizer("this.personname;");
+        ArrayList<Token> tokens = tokenizer.tokenize();
+        Parser parser = new Parser(tokens);
+        ParseResult<Stmt> s = new ParseResult<Stmt>(new ExpStmt(new ThisExp(Optional.of("personname"))), 0);
+        assertEquals(s.result, parser.stmt(0).result);
+    }
 
     @Test
     public void testCallExp() throws ParserException, TokenizerException{
@@ -110,10 +118,10 @@ public class ParserTest {
         VarExp conditionExp = new VarExp("x");
         
         List<Stmt> thenBlock = new ArrayList<>();
-        thenBlock.add(new AssignStmt("y", new IntExp(5)));
+        thenBlock.add(new AssignStmt(Optional.empty(), "y", new IntExp(5)));
         
         List<Stmt> elseBlock = new ArrayList<>();
-        elseBlock.add(new AssignStmt("z", new IntExp(10)));
+        elseBlock.add(new AssignStmt(Optional.empty(), "z", new IntExp(10)));
         
         IfStmt expectedIfStmt = new IfStmt(conditionExp, thenBlock, Optional.of(elseBlock));
         
@@ -144,7 +152,7 @@ public class ParserTest {
         Exp i = new VarExp("y");
         Exp j = new IntExp(2);
         Exp exp = new BinaryExp(i, op, j);
-        AssignStmt assignment = new AssignStmt("x", exp);
+        AssignStmt assignment = new AssignStmt(Optional.empty(), "x", exp);
         stmts.add(assignment);
 
         ExpStmt printstmt = new ExpStmt(new PrintlnExp(new VarExp("x")));
@@ -170,7 +178,7 @@ public class ParserTest {
         superArgs.add(new BooleanExp(true));
         
         List<Stmt> body = new ArrayList<>();
-        body.add(new AssignStmt("d", 
+        body.add(new AssignStmt(Optional.empty(), "d", 
             new BinaryExp(
                 new VarExp("e"),
                 new PlusOp(),
@@ -216,7 +224,7 @@ public class ParserTest {
         MethodDef method = new MethodDef("stuff", vardeclist, new VoidType(), methodStmts);
         methods.add(method);
 
-        Stmt assignStmt = new AssignStmt("x", new BinaryExp(new IntExp(2), new PlusOp(), new IntExp(2)));
+        Stmt assignStmt = new AssignStmt(Optional.empty(), "x", new BinaryExp(new IntExp(2), new PlusOp(), new IntExp(2)));
         List<Stmt> othermethodstmts = new ArrayList<>();
         othermethodstmts.add(assignStmt);
         MethodDef othermethod = new MethodDef("otherstuff", vardeclist, new VoidType(), othermethodstmts);
@@ -283,7 +291,7 @@ public void testParseWholeProgram() throws TokenizerException, ParserException {
     
     List<Stmt> expectedStmts = new ArrayList<>();
     expectedStmts.add(new VardecStmt(new ClassType("Animal"), "cat"));
-    expectedStmts.add(new AssignStmt("cat", new NewExp(new ClassType("Cat"), Optional.empty())));
+    expectedStmts.add(new AssignStmt(Optional.empty(), "cat", new NewExp(new ClassType("Cat"), Optional.empty())));
     
     List<MethodCall> methodCalls = new ArrayList<>();
     methodCalls.add(new MethodCall("speak", new ArrayList<>()));

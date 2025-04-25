@@ -85,9 +85,23 @@ public class Typechecker {
             PrintlnExp print = (PrintlnExp)exp;
             return typecheckExp(print.e(), typeEnv, inClass);
         }else if(exp instanceof ThisExp){
+            ThisExp thisexp = (ThisExp)exp;
             if(inClass.isPresent()){
                 ClassType classType = inClass.get();
-                return classType;
+                if(thisexp.parentVar().isPresent()){
+                    String var = thisexp.parentVar().get();
+                    ClassDef classdef = lookupClass(classType.name());
+                    for(VardecStmt stmt : classdef.vardec){
+                        if(stmt.name().equals(var)){
+                            return stmt.type();
+                        }
+                    }
+                    throw new TypecheckerErrorException("Variable '" + thisexp.parentVar().get()
+                    + "' not found in parent class '" + classType.name());
+                }else{
+                    return classType;
+                }
+                
             }else{
                 throw new TypecheckerErrorException("Using 'this' when not in a class");
             }
@@ -239,6 +253,12 @@ public class Typechecker {
                                                       final Map<Variable, Type> typeEnv,
                                                       final Optional<ClassType> inClass)
                                                       throws TypecheckerErrorException{
+        if(stmt.thisTarget().isPresent()){
+            ThisExp target = stmt.thisTarget().get();
+            Type targetType = typecheckExp(target, typeEnv, inClass);
+            assertTypesEqual(targetType, typecheckExp(stmt.e(), typeEnv, inClass));
+            return typeEnv;
+        }
         Variable variable = new Variable(stmt.name());
         if(typeEnv.containsKey(variable)){
             final Type expected = typeEnv.get(variable);
@@ -288,7 +308,7 @@ public class Typechecker {
             if(returnStmt.e().isPresent()){
                 Exp returnExp = returnStmt.e().get();
                 Type expType = typecheckExp(returnExp, typeEnv, inClass);
-                if(expType == returnType.get()){
+                if(expType.equals(returnType.get())){
                     return typeEnv;
                 }else{
                     throw new TypecheckerErrorException("return expression is of type '" + expType.toString()
