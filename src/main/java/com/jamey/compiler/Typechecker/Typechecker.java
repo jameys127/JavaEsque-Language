@@ -295,6 +295,140 @@ public class Typechecker {
         }
     }
 
+    public static void typecheckMethodDef(final MethodDef method,
+                                          final Optional<ClassType> inClass) 
+                                          throws TypecheckerErrorException{
+        Map<Variable, Type> newMap = new HashMap<>();
+        for(VardecStmt vardecs : method.vars){
+            newMap = typecheckStmt(vardecs, newMap, inClass, false, Optional.of(method.type));
+        }
+        for(Stmt body : method.stmts){
+            newMap = typecheckStmt(body, newMap, inClass, false, Optional.of(method.type));
+        }
+        if(!(method.type instanceof VoidType) && !stmtsReturnProperly(method.stmts)){
+            throw new TypecheckerErrorException("Method '" + method.methodname + 
+            "' must definitely return a value of type '" + method.type.toString() + "'");
+        }
+    }
+    public static boolean stmtsReturnProperly(List<Stmt> stmts){
+        for(Stmt stmt : stmts){
+            if(stmt instanceof ReturnStmt){
+                return true;
+            }else if(stmt instanceof IfStmt){
+                IfStmt ifstmt = (IfStmt)stmt;
+                boolean ifbody = stmtsReturnProperly(ifstmt.stmt());
+                if(ifstmt.elseStmt().isPresent()){
+                    boolean elsebody = stmtsReturnProperly(ifstmt.elseStmt().get());
+                    if(ifbody && elsebody){
+                        return true;
+                    }
+                }else {
+                    if(ifbody){
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    public static void typecheckConstructor(final ClassDef classdef)
+                                            throws TypecheckerErrorException{
+        Map<Variable, Type> typeEnv = new HashMap<>();
+        List<VardecStmt> consVardecs = classdef.constructor.vardecs;
+        for(VardecStmt var : consVardecs){
+            typeEnv = addToMap(typeEnv, new Variable(var.name()), var.type());
+        }
+        Optional<ClassType> inClass = Optional.of(new ClassType(classdef.classname));
+        if(classdef.extend.isPresent()){
+            if(!classdef.constructor.exps.isPresent()){
+                throw new TypecheckerErrorException("A super call is required when extending: "+classdef.classname);
+            }
+            ClassDef superClass = lookupClass(classdef.extend.get());
+            if(superClass.constructor.vardecs.size() != classdef.constructor.exps.get().size()){
+                throw new TypecheckerErrorException("Super call must contain same number of arguments as class '"
+                 + superClass.classname +"' constructor");
+            }
+            List<Exp> superCallExps = classdef.constructor.exps.get();
+            for(int i = 0; i < superClass.constructor.vardecs.size(); i++){
+                Type argType = typecheckExp(superCallExps.get(i), typeEnv, inClass);
+                try{
+                    assertTypesEqual(superClass.constructor.vardecs.get(i).type(), argType);                   
+                } catch (TypecheckerErrorException e){
+                    throw new TypecheckerErrorException("supplied super args and super class contrustor don't match types:" + e);
+                }
+            }
+        }else{
+            if(classdef.constructor.exps.isPresent()){
+                throw new TypecheckerErrorException("Called 'super' when not extending a class");
+            }
+        }
+        for(Stmt stmt : classdef.constructor.stmts){
+            typecheckStmt(stmt, typeEnv, inClass, false, Optional.empty());
+        }
+    }
+    public static void typecheckClassDef(final ClassDef classdef)throws TypecheckerErrorException{
+        Map<Variable, Type> typeEnv = new HashMap<>();
+        for(VardecStmt vardec : classdef.vardec){
+            typeEnv = typecheckStmt(vardec, typeEnv, Optional.of(new ClassType(classdef.classname)), false, Optional.empty());
+        }
+        typecheckConstructor(classdef);
+        for(MethodDef method : classdef.methoddef){
+            typecheckMethodDef(method, Optional.of(new ClassType(classdef.classname)));
+        }
+        if(classdef.extend.isPresent()){
+            methodOverriding(classdef, lookupClass(classdef.extend.get()));   
+        }
+    }
+    public static void methodOverriding(ClassDef childClass, ClassDef parentClass) throws TypecheckerErrorException{
+        for(MethodDef childmethod : childClass.methoddef){
+            for(MethodDef parentmethod : parentClass.methoddef){
+                if(childmethod.methodname.equals(parentmethod.methodname)){
+                    if(!isSubtypeOrSameType(childmethod.type, parentmethod.type)){
+                        throw new TypecheckerErrorException("Method '" + childmethod.methodname
+                        + "overrides with incompatible type");
+                    }
+                    if(childmethod.vars.size() != parentmethod.vars.size()){
+                        throw new TypecheckerErrorException("number of arugments for overriding method '"+
+                        childmethod.methodname + "' don't match number of parent method arguments");
+                    }
+                    for(int i = 0; i < childmethod.vars.size(); i++){
+                        Type childtype = childmethod.vars.get(i).type();
+                        Type parenttype = parentmethod.vars.get(i).type();
+                        if(!childtype.equals(parenttype)){
+                            throw new TypecheckerErrorException("argument types for overrideing method '"+
+                            childmethod.methodname + "' don't match types for parent method arguments");
+                        }
+                    }
+                }
+            }
+        }
+    }
+    public static boolean isSubtypeOrSameType(Type childType, Type parentType){
+        if(childType.equals(parentType)){
+            return true;
+        }
+        if(childType instanceof ClassType && parentType instanceof ClassType){
+            ClassType childClassType = (ClassType)childType;
+            ClassType parentClassType = (ClassType)parentType;
+            ClassDef childClass = lookupClass(childClassType.name());
+            String childClassName = childClass.classname;
+            while(true){
+                ClassDef currentClass = lookupClass(childClassName);
+                if(currentClass.extend.isPresent()){
+                    String parentClassName = currentClass.extend.get();
+                    if(parentClassName.equals(parentClassType.name())){
+                        return true;
+                    }
+                    childClassName = parentClassName;
+                }else {
+                    break;
+                }
+            }
+        }
+        return false;
+    }
+
     //for now this only checks the stmts and not all of the class definitions
     public static void typecheckProgram(final Program program) throws TypecheckerErrorException{
 
