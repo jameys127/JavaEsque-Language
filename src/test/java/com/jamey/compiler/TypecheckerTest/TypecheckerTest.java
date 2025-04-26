@@ -12,6 +12,9 @@ import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 import com.jamey.compiler.Typechecker.*;
+import com.jamey.compiler.Lexer.Token;
+import com.jamey.compiler.Lexer.Tokenizer;
+import com.jamey.compiler.Lexer.TokenizerException;
 import com.jamey.compiler.Parser.*;
 import com.jamey.compiler.Parser.MethodCallExp.MethodCall;
 
@@ -134,6 +137,117 @@ public class TypecheckerTest {
         ClassDef person = createPersonClass();
         Typechecker.typecheckClassDef(person);
     }
+    @Test
+    public void testTypecheckingProgramWithInheritingClassDefs()throws TypecheckerErrorException{
+        ClassDef person = createPersonClass();
+        ClassDef derek = createDerekClass();
+        List<ClassDef> listOfClasses = new ArrayList<>();
+        List<Stmt> listOfStmts = new ArrayList<>();
+        listOfClasses.add(person);
+        listOfClasses.add(derek);
+        Stmt stmt = new ExpStmt(new PrintlnExp(new IntExp(3)));
+        listOfStmts.add(stmt);
+        Program program = new Program(listOfClasses, listOfStmts);
+        Typechecker.typecheckProgram(program);
+        
+    }
+    @Test
+    public void testNewExpWithNoParameters()throws TypecheckerErrorException{
+        String classname = "MyClass";
+        List<VardecStmt> vardecs = new ArrayList<>();
+        
+        List<VardecStmt> constructorParams = new ArrayList<>();
+
+        List<Stmt> constructorBody = new ArrayList<>();
+        Constructor constructor = new Constructor(constructorParams, Optional.empty(), constructorBody);
+
+        List<MethodDef> methods = new ArrayList<>();
+        String printMethod = "printing";
+        Type returnVoidType = new VoidType();
+        List<VardecStmt> params = new ArrayList<>();
+        List<Stmt> prinStmts = new ArrayList<>();
+        prinStmts.add(new ExpStmt(new PrintlnExp(new IntExp(5))));
+        methods.add(new MethodDef(printMethod, params, returnVoidType, prinStmts));
+        ClassDef myclass = new ClassDef(classname, Optional.empty(), vardecs, constructor, methods);
+        
+        Typechecker.putClassInMap(classname, myclass);
+        
+        NewExp newcall = new NewExp(new ClassType(classname), Optional.empty());
+        Type result = Typechecker.typecheckExp(newcall, typeEnv, inClass);
+        assertEquals(new ClassType(classname), result);
+
+
+    }
+    @Test
+    public void testIfCondition()throws TokenizerException, ParserException, TypecheckerErrorException{
+        String input = """
+                boolean condition;
+                condition = false;
+                if(false){
+                    println(2);
+                }else{
+                    println(3);
+                }
+                """;
+        Tokenizer tokenizer = new Tokenizer(input);
+        ArrayList<Token> tokens = tokenizer.tokenize();
+        Parser parser = new Parser(tokens);
+        Program program = parser.parseWholeProgram();
+        Typechecker.typecheckProgram(program); 
+    }
+    @Test
+    public void testWhileLoop()throws TokenizerException, ParserException, TypecheckerErrorException{
+        String input = """
+                boolean stuff;
+                stuff = true;
+                int x;
+                x = 5;
+                while(stuff){
+                    x = x + 1;
+                    break;
+                }
+
+                """;
+        Tokenizer tokenizer = new Tokenizer(input);
+        ArrayList<Token> tokens = tokenizer.tokenize();
+        Parser parser = new Parser(tokens);
+        Program program = parser.parseWholeProgram();
+        Typechecker.typecheckProgram(program); 
+    }
+    @Test
+    public void testingWithTheWholeCompiler()throws TokenizerException, ParserException, TypecheckerErrorException{
+        String input = """
+            class Animal {
+              init() {}
+              method speak() void { return; }
+            }
+            class Cat extends Animal {
+              init() { super(); }
+              method meow(int x, int y) void { return println(1); }
+            }
+            class Mouse extends Cat {
+                init() { super(); }
+                method meow(int d, int f) void { int c; c = d + f; println(c); }
+                method squeak(int x, int y) void {return println(2); }
+            }
+            Animal animal;
+            Animal cat;
+            Cat mouse;
+            animal = new Animal();
+            cat = new Cat();
+            mouse = new Mouse();
+            cat.speak();
+            mouse.speak();
+            mouse.meow(5, 6);
+            mouse.squeak(1, 4);
+            """;
+    
+        Tokenizer tokenizer = new Tokenizer(input);
+        ArrayList<Token> tokens = tokenizer.tokenize();
+        Parser parser = new Parser(tokens);
+        Program result = parser.parseWholeProgram();
+        Typechecker.typecheckProgram(result);
+    }
 
     private ClassDef createPersonClass() {
         /*
@@ -153,7 +267,7 @@ public class TypecheckerTest {
         constructorParams.add(new VardecStmt(new IntType(), "age"));
         
         List<Stmt> constructorBody = new ArrayList<>();
-        //assignment statement that would be like this.age = age | Not yet functional
+        //assignment statement that would be like this.age = age
         constructorBody.add(new AssignStmt(Optional.of(new ThisExp(Optional.of("age"))), "age", new VarExp("age")));
         
         Constructor constructor = new Constructor(constructorParams, Optional.empty(), constructorBody);
@@ -193,6 +307,47 @@ public class TypecheckerTest {
         methods.add(new MethodDef(add5YearsMethod, add5YearsParams, intReturnType, add5YearsBody));
         
         return new ClassDef(className, extend, vardecs, constructor, methods);
+    }
+    private ClassDef createDerekClass(){
+        String classname = "Derek";
+        Optional<String> extend = Optional.of("Person");
+        List<VardecStmt> vardecs = new ArrayList<>();
+        vardecs.add(new VardecStmt(new BoolType(), "deceased"));
+        
+        List<VardecStmt> constructorParams = new ArrayList<>();
+        constructorParams.add(new VardecStmt(new BoolType(), "deceased"));
+
+        List<Exp> superexps = new ArrayList<>();
+        superexps.add(new IntExp(30));
+
+        List<Stmt> constructorBody = new ArrayList<>();
+        constructorBody.add(new AssignStmt(Optional.of(new ThisExp(Optional.of("deceased"))), "deceased", new VarExp("deceased")));
+
+        Constructor constructor = new Constructor(constructorParams, Optional.of(superexps), constructorBody);
+
+        List<MethodDef> methods = new ArrayList<>();
+
+        //isDeceased method
+        String isDeceasedMethod = "isDeceased";
+        Type boolReturnType = new BoolType();
+        List<VardecStmt> isDeceasedParams = new ArrayList<>();
+        List<Stmt> isDeceasedBody = new ArrayList<>();
+        isDeceasedBody.add(new ReturnStmt(Optional.of(new ThisExp(Optional.of("deceased")))));
+        methods.add(new MethodDef(isDeceasedMethod, isDeceasedParams, boolReturnType, isDeceasedBody));
+
+        String add5YearsMethod = "add5Years";
+        List<VardecStmt> add5YearsParams = new ArrayList<>();
+        List<Stmt> add5YearsBody = new ArrayList<>();
+        BinaryExp addingYears = new BinaryExp(
+            new ThisExp(Optional.of("age")),
+            new PlusOp(),
+            new IntExp(10)
+        );
+        add5YearsBody.add(new ReturnStmt(Optional.of(addingYears)));
+        methods.add(new MethodDef(add5YearsMethod, add5YearsParams, new IntType(), add5YearsBody));
+
+        return new ClassDef(classname, extend, vardecs, constructor, methods);
+        
     }
 
 }

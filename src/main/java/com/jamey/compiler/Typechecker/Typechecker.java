@@ -83,7 +83,8 @@ public class Typechecker {
              * Might need to change this depending on what I can print
              */
             PrintlnExp print = (PrintlnExp)exp;
-            return typecheckExp(print.e(), typeEnv, inClass);
+            typecheckExp(print.e(), typeEnv, inClass);
+            return new VoidType();
         }else if(exp instanceof ThisExp){
             ThisExp thisexp = (ThisExp)exp;
             if(inClass.isPresent()){
@@ -91,13 +92,20 @@ public class Typechecker {
                 if(thisexp.parentVar().isPresent()){
                     String var = thisexp.parentVar().get();
                     ClassDef classdef = lookupClass(classType.name());
-                    for(VardecStmt stmt : classdef.vardec){
-                        if(stmt.name().equals(var)){
-                            return stmt.type();
+                    while(true){
+                        for(VardecStmt stmt : classdef.vardec){
+                            if(stmt.name().equals(var)){
+                                return stmt.type();
+                            }
+                        }
+                        if(classdef.extend.isPresent()){
+                            classdef = lookupClass(classdef.extend.get());
+                        }else{
+                            break;
                         }
                     }
                     throw new TypecheckerErrorException("Variable '" + thisexp.parentVar().get()
-                    + "' not found in parent class '" + classType.name());
+                    + "' not found in parent class '" + classdef.classname + "' or any children thereof");
                 }else{
                     return classType;
                 }
@@ -223,6 +231,22 @@ public class Typechecker {
      }
 
     public static void assertTypesEqual(final Type expected, final Type received) throws TypecheckerErrorException{
+        if(!(expected.equals(received)) && (expected instanceof ClassType && received instanceof ClassType)){
+            ClassType receivedClass = (ClassType)received;
+            ClassDef receivedClassDef = lookupClass(receivedClass.name());
+            while(true){
+                if(receivedClassDef.extend.isPresent()){
+                    String parentclass = lookupClass(receivedClassDef.extend.get()).classname;
+                    Type parentType = new ClassType(parentclass);
+                    if(expected.equals(parentType)){
+                        return;
+                    }
+                    receivedClassDef = lookupClass(receivedClassDef.extend.get());
+                }else{
+                    break;
+                }
+            }
+        }
         if(!(expected.equals(received))){
             throw new TypecheckerErrorException("Types do not match; Excpected: "
                                                  + expected.toString() + ", Received: " + received.toString());
@@ -263,7 +287,8 @@ public class Typechecker {
         if(typeEnv.containsKey(variable)){
             final Type expected = typeEnv.get(variable);
             assertTypesEqual(expected, typecheckExp(stmt.e(), typeEnv, inClass));
-            return typeEnv;
+            Map<Variable, Type> newMap = addToMap(typeEnv, variable, typecheckExp(stmt.e(), typeEnv, inClass));
+            return newMap;
         }else {
             throw new TypecheckerErrorException("Variable not in scope: " + stmt.name());
         }
@@ -433,7 +458,7 @@ public class Typechecker {
                 if(childmethod.methodname.equals(parentmethod.methodname)){
                     if(!isSubtypeOrSameType(childmethod.type, parentmethod.type)){
                         throw new TypecheckerErrorException("Method '" + childmethod.methodname
-                        + "overrides with incompatible type");
+                        + "' overrides with incompatible type");
                     }
                     if(childmethod.vars.size() != parentmethod.vars.size()){
                         throw new TypecheckerErrorException("number of arugments for overriding method '"+
@@ -487,8 +512,9 @@ public class Typechecker {
         for(ClassDef classes : program.classdefs){
             typecheckClassDef(classes);
         }
+        Map<Variable, Type> stmtMap = new HashMap<>();
         for(Stmt stmt : program.stmts){
-            typecheckStmt(stmt, new HashMap<Variable, Type>(), Optional.empty(), false, Optional.empty());
+            stmtMap = typecheckStmt(stmt, stmtMap, Optional.empty(), false, Optional.empty());
         }
     }
 }
