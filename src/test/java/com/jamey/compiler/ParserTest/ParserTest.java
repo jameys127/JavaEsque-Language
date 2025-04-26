@@ -52,10 +52,10 @@ public class ParserTest {
 
     @Test
     public void testCallExp() throws ParserException, TokenizerException{
-        System.out.println("\n\n");
+        // System.out.println("\n\n");
         Tokenizer tokenizer = new Tokenizer("Obj1.methodname()");
         ArrayList<Token> tokens = tokenizer.tokenize();
-        System.out.println(tokens);
+        // System.out.println(tokens);
         Parser parser = new Parser(tokens);
 
 
@@ -71,10 +71,10 @@ public class ParserTest {
 
     @Test
     public void testCallWithMultExp() throws ParserException, TokenizerException{
-        System.out.println("\n\n");
+        // System.out.println("\n\n");
         Tokenizer tokenizer = new Tokenizer("Obj1.methodname().size(2)");
         ArrayList<Token> tokens = tokenizer.tokenize();
-        System.out.println(tokens);
+        // System.out.println(tokens);
         Parser parser = new Parser(tokens);
 
 
@@ -135,7 +135,7 @@ public class ParserTest {
         Tokenizer tokenizer = new Tokenizer("method stuff(int x, int y) void {x = y + 2; println(x);}");
         ArrayList<Token> tokens = tokenizer.tokenize();
         Parser parser = new Parser(tokens);
-        System.out.println("\n\n\n"+tokens.toString()+"\n\n\n");
+        // System.out.println("\n\n\n"+tokens.toString()+"\n\n\n");
 
         String name = "stuff";
 
@@ -237,71 +237,69 @@ public class ParserTest {
     }
 
     @Test
-public void testParseWholeProgram() throws TokenizerException, ParserException {
-    String input = """
-            class Animal {
-              init() {}
-              method speak() void { return println(0); }
-            }
-            class Cat extends Animal {
-              init() { super(); }
-              method speak() void { return println(1); }
-            }
-            Animal cat;
-            cat = new Cat();
-            cat.speak();
-            """;
+    public void testParseWholeProgram() throws TokenizerException, ParserException {
+        String input = """
+                class Animal {
+                init() {}
+                method speak() void { return println(0); }
+                }
+                class Cat extends Animal {
+                init() { super(); }
+                method speak() void { return println(1); }
+                }
+                Animal cat;
+                cat = new Cat();
+                cat.speak();
+                """;
+        
+        Tokenizer tokenizer = new Tokenizer(input);
+        ArrayList<Token> tokens = tokenizer.tokenize();
+        Parser parser = new Parser(tokens);
+        Program result = parser.parseWholeProgram();
+        
+        List<ClassDef> expectedClasses = new ArrayList<>();
+        
+        List<VardecStmt> animalVardecs = new ArrayList<>();
+        List<VardecStmt> emptyParams = new ArrayList<>();
+        List<Stmt> emptyStmts = new ArrayList<>();
+        Constructor animalConstructor = new Constructor(emptyParams, Optional.empty(), emptyStmts);
+        
+        List<Stmt> speakStmts = new ArrayList<>();
+        speakStmts.add(new ReturnStmt(Optional.of(new PrintlnExp(new IntExp(0)))));
+        MethodDef speakMethod = new MethodDef("speak", emptyParams, new VoidType(), speakStmts);
+        
+        List<MethodDef> animalMethods = new ArrayList<>();
+        animalMethods.add(speakMethod);
+        
+        ClassDef animalClass = new ClassDef("Animal", Optional.empty(), animalVardecs, animalConstructor, animalMethods);
+        expectedClasses.add(animalClass);
+        
+        List<VardecStmt> catVardecs = new ArrayList<>();
+        List<Exp> superArgs = new ArrayList<>();
+        List<Stmt> catConstructorStmts = new ArrayList<>();
+        Constructor catConstructor = new Constructor(emptyParams, Optional.of(superArgs), catConstructorStmts);
+        
+        List<Stmt> catSpeakStmts = new ArrayList<>();
+        catSpeakStmts.add(new ReturnStmt(Optional.of(new PrintlnExp(new IntExp(1)))));
+        MethodDef catSpeakMethod = new MethodDef("speak", emptyParams, new VoidType(), catSpeakStmts);
+        
+        List<MethodDef> catMethods = new ArrayList<>();
+        catMethods.add(catSpeakMethod);
+        
+        ClassDef catClass = new ClassDef("Cat", Optional.of("Animal"), catVardecs, catConstructor, catMethods);
+        expectedClasses.add(catClass);
+        
+        List<Stmt> expectedStmts = new ArrayList<>();
+        expectedStmts.add(new VardecStmt(new ClassType("Animal"), "cat"));
+        expectedStmts.add(new AssignStmt(Optional.empty(), "cat", new NewExp(new ClassType("Cat"), Optional.empty())));
+        
+        List<MethodCall> methodCalls = new ArrayList<>();
+        methodCalls.add(new MethodCall("speak", new ArrayList<>()));
+        expectedStmts.add(new ExpStmt(new MethodCallExp(new VarExp("cat"), methodCalls)));
+        
+        Program expected = new Program(expectedClasses, expectedStmts);
+        
+        assertEquals(expected, result);
+    }
     
-    Tokenizer tokenizer = new Tokenizer(input);
-    ArrayList<Token> tokens = tokenizer.tokenize();
-    Parser parser = new Parser(tokens);
-    Program result = parser.parseWholeProgram();
-    
-    List<ClassDef> expectedClasses = new ArrayList<>();
-    
-    List<VardecStmt> animalVardecs = new ArrayList<>();
-    List<VardecStmt> emptyParams = new ArrayList<>();
-    List<Stmt> emptyStmts = new ArrayList<>();
-    Constructor animalConstructor = new Constructor(emptyParams, Optional.empty(), emptyStmts);
-    
-    List<Stmt> speakStmts = new ArrayList<>();
-    speakStmts.add(new ReturnStmt(Optional.of(new PrintlnExp(new IntExp(0)))));
-    MethodDef speakMethod = new MethodDef("speak", emptyParams, new VoidType(), speakStmts);
-    
-    List<MethodDef> animalMethods = new ArrayList<>();
-    animalMethods.add(speakMethod);
-    
-    ClassDef animalClass = new ClassDef("Animal", Optional.empty(), animalVardecs, animalConstructor, animalMethods);
-    expectedClasses.add(animalClass);
-    
-    List<VardecStmt> catVardecs = new ArrayList<>();
-    List<Exp> superArgs = new ArrayList<>();
-    List<Stmt> catConstructorStmts = new ArrayList<>();
-    Constructor catConstructor = new Constructor(emptyParams, Optional.of(superArgs), catConstructorStmts);
-    
-    List<Stmt> catSpeakStmts = new ArrayList<>();
-    catSpeakStmts.add(new ReturnStmt(Optional.of(new PrintlnExp(new IntExp(1)))));
-    MethodDef catSpeakMethod = new MethodDef("speak", emptyParams, new VoidType(), catSpeakStmts);
-    
-    List<MethodDef> catMethods = new ArrayList<>();
-    catMethods.add(catSpeakMethod);
-    
-    ClassDef catClass = new ClassDef("Cat", Optional.of("Animal"), catVardecs, catConstructor, catMethods);
-    expectedClasses.add(catClass);
-    
-    List<Stmt> expectedStmts = new ArrayList<>();
-    expectedStmts.add(new VardecStmt(new ClassType("Animal"), "cat"));
-    expectedStmts.add(new AssignStmt(Optional.empty(), "cat", new NewExp(new ClassType("Cat"), Optional.empty())));
-    
-    List<MethodCall> methodCalls = new ArrayList<>();
-    methodCalls.add(new MethodCall("speak", new ArrayList<>()));
-    expectedStmts.add(new ExpStmt(new MethodCallExp(new VarExp("cat"), methodCalls)));
-    
-    Program expected = new Program(expectedClasses, expectedStmts);
-    
-    assertEquals(expected, result);
-}
-    
-
-
 }
