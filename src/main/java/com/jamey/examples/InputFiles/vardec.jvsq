@@ -1,6 +1,27 @@
-int x;
-x = 2;
-int y;
-y = 4;
-int z;
-z = x + y;
+class Animal {
+    init() {}
+    method speak() void { return; }
+}
+class Cat extends Animal {
+    int other;
+    init(int y) { super(); this.other = y;}
+    method meow(int x, int y) void { return println(1); }
+}
+class Mouse extends Cat {
+    int something;
+    init(int x, int y) { super(x); this.something = y;}
+    method meow(int d, int f) void { int c; c = d + f; println(c); }
+    method squeak(int x, int y) void {return println(2); }
+    method gettingStuff() int {return this.other;}
+}
+Animal animal;
+Animal cat;
+Cat mouse;
+animal = new Animal();
+cat = new Cat(7);
+mouse = new Mouse(36, 12);
+cat.speak();
+mouse.speak();
+mouse.meow(5, 6);
+mouse.squeak(1, 4);
+println(mouse.gettingStuff());

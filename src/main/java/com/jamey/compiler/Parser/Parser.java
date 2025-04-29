@@ -230,7 +230,7 @@ public class Parser {
                     break;
                 }
             }
-            if(getToken(pos + 1) instanceof ElseToken){
+            if(tokens.size() < pos + 1 && getToken(pos + 1) instanceof ElseToken){
                 List<Stmt> list = new ArrayList<>();
                 assertTokenIs(pos + 2, new LCurlyBraceToken());
                 pos += 3;
