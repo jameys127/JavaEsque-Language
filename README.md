@@ -114,6 +114,9 @@ dog.speak();
 ```
 
 ## Running the Code ##
+Place your .jvsq file into 'InputFiles' in the 'examples' folder
 ```console
-mvn exec:java -D"exec.mainClass"="com.jamey.compiler.Main.JavaEsque" -D"exec.args"="input_program.jvsq output_program.js"
+mvn exec:java -D"exec.mainClass"="com.jamey.compiler.Main.JavaEsque" -D"exec.args"="src/main/java/com/jamey/examples/InputFiles/name-of-file.jvsq src/main/java/com/jamey/examples/OutputFiles/name-of-output-file.js"
 ```
+Replace 'name-of-file' with the name of the .jvsq file you put in "InputFiles"
+Replace 'name-of-output-file' with whatever you want the JavaScript file to be called
