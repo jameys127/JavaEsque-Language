@@ -248,6 +248,30 @@ public class TypecheckerTest {
         Program result = parser.parseWholeProgram();
         Typechecker.typecheckProgram(result);
     }
+    @Test
+    public void testingExtendFurther()throws TokenizerException, ParserException, TypecheckerErrorException{
+        String input = """
+                class Person {
+                    int x;
+                    init(int y) {this.x = y;}
+                    method speak() int { return this.x; }
+                }
+                class Derek extends Person{
+                    boolean stuff;
+                    init(int z, boolean l) { super(z); this.stuff = l;}
+                    method stuff() boolean {return this.stuff;}
+                }
+                Person person;
+                boolean trueOrFalse;
+                person = new Derek(2, false);
+                trueOrFalse = person.stuff();
+                """;
+        Tokenizer tokenizer = new Tokenizer(input);
+        ArrayList<Token> tokens = tokenizer.tokenize();
+        Parser parser = new Parser(tokens);
+        Program result = parser.parseWholeProgram();
+        Typechecker.typecheckProgram(result);
+    }
 
     private ClassDef createPersonClass() {
         /*

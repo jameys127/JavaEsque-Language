@@ -112,3 +112,8 @@ dog = new Dog();
 cat.speak();
 dog.speak();
 ```
+
+## Running the Code ##
+```console
+mvn exec:java -D"exec.mainClass"="com.jamey.compiler.Main.JavaEsque" -D"exec.args"="input_program.jvsq output_program.js"
+```
