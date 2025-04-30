@@ -170,7 +170,23 @@ public class Typechecker {
             left instanceof IntType &&
             right instanceof IntType){
             return new IntType();
-        }else{
+        }else if((exp.op() instanceof GreaterThanOp ||
+                  exp.op() instanceof GreaterThanOrEqualOp ||
+                  exp.op() instanceof LessThanOp ||
+                  exp.op() instanceof LessThanOrEqualOp) &&
+                  left instanceof IntType &&
+                  right instanceof IntType){
+            return new BoolType();
+        }else if(exp.op() instanceof EqualityOp){
+            try{
+                assertTypesEqual(left, right);
+                return new BoolType();
+            }catch (TypecheckerErrorException e){
+                throw new TypecheckerErrorException("Differnt types in the equality check; " +
+                 "left: " + left.toString() + " right: " + right.toString() + " error: " + e);
+            }
+        }
+        else{
             throw new TypecheckerErrorException("No such binary operation recognized");
         }
     }

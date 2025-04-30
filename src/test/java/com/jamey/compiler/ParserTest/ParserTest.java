@@ -123,7 +123,18 @@ public class ParserTest {
 
         assertEquals(stmt.result, parsed.result);
     }
+    @Test
+    public void testNewBinaryOp() throws TokenizerException, ParserException{
+        Tokenizer tokenizer = new Tokenizer("3 <= 10");
+        ArrayList<Token> tokens = tokenizer.tokenize();
+        System.out.println(tokens.toString());
+        Parser parser = new Parser(tokens);
 
+        ParseResult<Exp> exp = new ParseResult<Exp>(new BinaryExp(new IntExp(3), new LessThanOrEqualOp(), new IntExp(10)), 0);
+        ParseResult<Exp> parsed = parser.exp(0);
+
+        assertEquals(exp.result, parsed.result);
+    }
     @Test
     public void testIfStatement() throws TokenizerException, ParserException {
         Tokenizer tokenizer = new Tokenizer("if (x) { y = 5; } else { z = 10; }");

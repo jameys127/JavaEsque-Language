@@ -24,6 +24,16 @@ public class CodeGen {
             s = "*";
         }else if(op instanceof DivOp){
             s = "/";
+        }else if(op instanceof LessThanOp){
+            s = "<";
+        }else if(op instanceof LessThanOrEqualOp){
+            s = "<=";
+        }else if(op instanceof GreaterThanOp){
+            s = ">";
+        }else if(op instanceof GreaterThanOrEqualOp){
+            s = ">=";
+        }else if(op instanceof EqualityOp){
+            s = "==";
         }else{
             assert(false);
             throw new CodeGenException("No such operator recognized: "+ op.toString());

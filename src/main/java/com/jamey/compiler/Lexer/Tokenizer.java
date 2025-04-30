@@ -128,8 +128,13 @@ public class Tokenizer {
             position++;
             return Optional.of(new DotToken());
         }else if(input.startsWith("=", position)){
-            position++;
-            return Optional.of(new EqualsToken());
+            if(position + 1 < input.length() && input.charAt(position + 1) == '='){
+                position += 2;
+                return Optional.of(new EqualityToken());
+            }else{
+                position++;
+                return Optional.of(new EqualsToken());
+            }
         }else if(input.startsWith("{", position)){
             position++;
             return Optional.of(new LCurlyBraceToken());
@@ -154,6 +159,22 @@ public class Tokenizer {
         }else if(input.startsWith("\"", position)){
             position++;
             return Optional.of(new QuoteToken());
+        }else if(input.startsWith("<", position)){
+            if(position + 1 < input.length() && input.charAt(position + 1) == '='){
+                position += 2;
+                return Optional.of(new LessOrEqualToken());
+            }else {
+                position++;
+                return Optional.of(new LessThanToken());
+            }
+        }else if(input.startsWith(">", position)){
+            if(position + 1 < input.length() && input.charAt(position + 1) == '='){
+                position += 2;
+                return Optional.of(new GreaterOrEqualToken());
+            }else{
+                position++;
+                return Optional.of(new GreaterThanToken());
+            }
         }
         else {
             return Optional.empty();

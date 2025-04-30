@@ -217,9 +217,43 @@ public class Parser {
         return new ParseResult<Exp>(result, pos);
     }
 
+    public ParseResult<Exp> boolBinaryOpExp(final int position) throws ParserException{
+        ParseResult<Exp> e = addExp(position);
+        Exp result = e.result;
+        int pos = e.position;
+        while (pos < tokens.size()){
+            final Token t = getToken(pos);
+            if(t instanceof GreaterThanToken || t instanceof GreaterOrEqualToken ||
+                t instanceof LessThanToken || t instanceof LessOrEqualToken ||
+                t instanceof EqualityToken){
+                
+                final Op op;
+                if(t instanceof GreaterThanToken){
+                    op = new GreaterThanOp();
+                }else if(t instanceof GreaterOrEqualToken){
+                    op = new GreaterThanOrEqualOp();
+                }else if(t instanceof LessThanToken){
+                    op = new LessThanOp();
+                }else if(t instanceof LessOrEqualToken){
+                    op = new LessThanOrEqualOp();
+                }else if(t instanceof EqualityToken){
+                    op = new EqualityOp();
+                }else {
+                    throw new ParserException("Unknown op");
+                }
+                final ParseResult<Exp> e2 = addExp(pos + 1);
+                result = new BinaryExp(result, op, e2.result);
+                pos = e2.position;
+            }else{
+                break;
+            }
+        }
+        return new ParseResult<Exp>(result, pos);
+    }
+
 
     public ParseResult<Exp> exp(final int position)throws ParserException{
-        return addExp(position);
+        return boolBinaryOpExp(position);
     }
 
     public ParseResult<Stmt> stmt(final int position)throws ParserException{

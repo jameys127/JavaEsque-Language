@@ -20,6 +20,7 @@ import com.jamey.compiler.Lexer.InitToken;
 import com.jamey.compiler.Lexer.IntegerToken;
 import com.jamey.compiler.Lexer.LCurlyBraceToken;
 import com.jamey.compiler.Lexer.LParenToken;
+import com.jamey.compiler.Lexer.LessOrEqualToken;
 import com.jamey.compiler.Lexer.MethodToken;
 import com.jamey.compiler.Lexer.MinusToken;
 import com.jamey.compiler.Lexer.MultToken;
@@ -62,6 +63,11 @@ public class TokenizerTest {
     public void testReadIdentifier(){
         Tokenizer tokenizer = new Tokenizer("wassup");
         assertEquals(Optional.of(new IdentifierToken("wassup")), tokenizer.tryReadIdentifierOrReservedWordToken());
+    }
+    @Test
+    public void testNewBinarySymbols(){
+        Tokenizer tokenizer = new Tokenizer("<=");
+        assertEquals(Optional.of(new LessOrEqualToken()), tokenizer.tryReadSymbolToken());
     }
 
     @Test

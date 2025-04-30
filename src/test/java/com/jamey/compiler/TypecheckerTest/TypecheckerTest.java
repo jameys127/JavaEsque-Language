@@ -43,7 +43,12 @@ public class TypecheckerTest {
         
         assertEquals(map, env);
     }
-    
+    @Test
+    public void typecheckNewBinaryOps() throws TypecheckerErrorException{
+        BinaryExp exp = new BinaryExp(new IntExp(3), new LessThanOrEqualOp(), new IntExp(10));
+        Type expected = Typechecker.typecheckBin(exp, typeEnv, inClass);
+        assertEquals(new BoolType(), expected);
+    }
     @Test
     public void testNewExpTypecheck() throws TypecheckerErrorException {
         ClassDef person = createPersonClass();
@@ -203,6 +208,23 @@ public class TypecheckerTest {
         Parser parser = new Parser(tokens);
         Program program = parser.parseWholeProgram();
         Typechecker.typecheckProgram(program); 
+    }
+    @Test
+    public void testBoolBinaryOp() throws TokenizerException, ParserException, TypecheckerErrorException{
+        String input = """
+                int x;
+                int y;
+                x = 2;
+                y = 2;
+                if(y <= x){
+                    println("hello");
+                }
+                """;
+        Tokenizer tokenizer = new Tokenizer(input);
+        ArrayList<Token> tokens = tokenizer.tokenize();
+        Parser parser = new Parser(tokens);
+        Program program = parser.parseWholeProgram();
+        Typechecker.typecheckProgram(program);
     }
     @Test
     public void testWhileLoop()throws TokenizerException, ParserException, TypecheckerErrorException{
