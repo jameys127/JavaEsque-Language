@@ -1,6 +1,7 @@
 package com.jamey.compiler.Lexer;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 public class Tokenizer {
@@ -34,6 +35,29 @@ public class Tokenizer {
             return Optional.of(new IntegerToken(Integer.parseInt(digits)));
         }
     }//tryReadIntegerToken()
+
+    public Optional<List<Token>> tryReadStringLiteral() throws TokenizerException{
+        if(position < input.length() && input.charAt(position) == '"'){
+            position++;
+            String chars = "";
+            while(position < input.length() && input.charAt(position) != '"'){
+                chars += input.charAt(position);
+                position++;
+            }
+            if(position >= input.length()){
+                throw new TokenizerException("Never closed the quotation marks");
+            }
+            position++;
+            
+            List<Token> listStringLiteral = new ArrayList<>();
+            listStringLiteral.add(new QuoteToken());
+            listStringLiteral.add(new IdentifierToken(chars));
+            listStringLiteral.add(new QuoteToken());
+            return Optional.of(listStringLiteral);
+        }else{
+            return Optional.empty();
+        }
+    }
 
     public Optional<Token> tryReadIdentifierOrReservedWordToken(){
         if(position < input.length() && Character.isLetter(input.charAt(position))){
@@ -127,27 +151,40 @@ public class Tokenizer {
         }else if(input.startsWith(";", position)){
             position++;
             return Optional.of(new SemicolonToken());
-        }else {
+        }else if(input.startsWith("\"", position)){
+            position++;
+            return Optional.of(new QuoteToken());
+        }
+        else {
             return Optional.empty();
         }
     }//tryReadSymbolToken()
 
-    public Token readToken() throws TokenizerException {
+    public List<Token> readToken() throws TokenizerException {
+        Optional<List<Token>> listOfTokens;
         Optional<Token> token;
+        if((listOfTokens = tryReadStringLiteral()).isPresent()){
+            return listOfTokens.get();
+        }
         if((token = tryReadIdentifierOrReservedWordToken()).isPresent() ||
             (token = tryReadIntegerToken()).isPresent() ||
             (token = tryReadSymbolToken()).isPresent()){
-                return token.get();
-            }else {
+                List<Token> list = new ArrayList<>();
+                list.add(token.get());
+                return list;
+        }else {
                 throw new TokenizerException("Character not recognized: " + input.charAt(position));
-            }
+        }
     }
 
     public ArrayList<Token> tokenize() throws TokenizerException{
         final ArrayList<Token> tokens = new ArrayList<Token>();
         skipWhiteSpace();
         while (position < input.length()){
-            tokens.add(readToken());
+            List<Token> list = readToken();
+            for(Token t : list){
+                tokens.add(t);
+            }
             skipWhiteSpace();
         }
         return tokens;

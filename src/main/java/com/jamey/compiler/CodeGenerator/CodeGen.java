@@ -39,6 +39,7 @@ public class CodeGen {
      * ParenExp - done
      * PrintlnExp - done
      * ThisExp - done
+     * StrExp
      */
     public void writeExp(final Exp exp)throws IOException, CodeGenException{
         if(exp instanceof IntExp intexp){
@@ -51,6 +52,10 @@ public class CodeGen {
             }
         }else if(exp instanceof VarExp varexp){
             writer.write(varexp.name());
+        }else if(exp instanceof StrExp strexp){
+            writer.write("\"");
+            writer.write(strexp.string());
+            writer.write("\"");
         }else if(exp instanceof BinaryExp binexp){
             writer.write("(");
             writeExp(binexp.l());

@@ -78,6 +78,8 @@ public class Typechecker {
             }else {
                 throw new TypecheckerErrorException("Variable not in scope: " + variable.toString());
             }
+        }else if(exp instanceof StrExp){
+            return new StringType();
         }else if(exp instanceof BinaryExp){
             return typecheckBin((BinaryExp)exp, typeEnv, inClass);
         }else if(exp instanceof ParenExp){

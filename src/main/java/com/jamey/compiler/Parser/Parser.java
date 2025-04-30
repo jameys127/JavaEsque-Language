@@ -74,6 +74,15 @@ public class Parser {
             final ParseResult<Exp> e = exp(position + 1);
             assertTokenIs(e.position + 1, new RParenToken());
             return new ParseResult<Exp>(e.result, e.position + 2);
+        }else if(token instanceof QuoteToken){
+            ParseResult<Exp> e = exp(position + 1);
+            if(!(e.result instanceof VarExp)){
+                throw new ParserException("Expected valid String inside quotations");
+            }else{
+                VarExp stringliteral = (VarExp)e.result;
+                assertTokenIs(e.position, new QuoteToken());
+                return new ParseResult<Exp>(new StrExp(stringliteral.name()), e.position + 1);
+            }
         }else if(token instanceof ThisToken){
             if(getToken(position + 1) instanceof DotToken){
                 if(getToken(position + 2) instanceof IdentifierToken id){
@@ -230,7 +239,7 @@ public class Parser {
                     break;
                 }
             }
-            if(tokens.size() < pos + 1 && getToken(pos + 1) instanceof ElseToken){
+            if(pos + 1 < tokens.size() && getToken(pos + 1) instanceof ElseToken){
                 List<Stmt> list = new ArrayList<>();
                 assertTokenIs(pos + 2, new LCurlyBraceToken());
                 pos += 3;
@@ -472,6 +481,8 @@ public class Parser {
             return new ParseResult<Type>(new BoolType(), position + 1);
         }else if(token instanceof VoidToken){
             return new ParseResult<Type>(new VoidType(), position + 1);
+        }else if(token instanceof StringToken){
+            return new ParseResult<Type>(new StringType(), position + 1);
         }else if(token instanceof IdentifierToken id){
             return new ParseResult<Type>(new ClassType(id.name()), position + 1);
         }else {

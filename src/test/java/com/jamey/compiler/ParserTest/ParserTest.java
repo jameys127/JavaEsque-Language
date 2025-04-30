@@ -49,7 +49,22 @@ public class ParserTest {
         ParseResult<Stmt> s = new ParseResult<Stmt>(new ExpStmt(new ThisExp(Optional.of("personname"))), 0);
         assertEquals(s.result, parser.stmt(0).result);
     }
-
+    @Test
+    public void testStringLiterals()throws TokenizerException, ParserException{
+        Tokenizer tokenizer = new Tokenizer("\"something\"");
+        ArrayList<Token> tokens = tokenizer.tokenize();
+        Parser parser = new Parser(tokens);
+        ParseResult<Exp> s = new ParseResult<Exp>(new StrExp("something"), 0);
+        assertEquals(s.result, parser.exp(0).result);
+    }
+    @Test
+    public void testStringLiteralAssignment()throws TokenizerException, ParserException{
+        Tokenizer tokenizer = new Tokenizer("x = \"something\";");
+        ArrayList<Token> tokens = tokenizer.tokenize();
+        Parser parser = new Parser(tokens);
+        ParseResult<Stmt> s = new ParseResult<Stmt>(new AssignStmt(Optional.empty(), "x", new StrExp("something")), 0);
+        assertEquals(s.result, parser.stmt(0).result);
+    }
     @Test
     public void testCallExp() throws ParserException, TokenizerException{
         // System.out.println("\n\n");

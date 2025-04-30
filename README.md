@@ -41,6 +41,8 @@ primary_exp ::=
   var | str | i | Variables, strings, and integers are     
                   expressions
 
+  '"' str '"' | String Literal
+
   `(` exp `)` | Parenthesized expressions
 
   `this` | Refers to my instance

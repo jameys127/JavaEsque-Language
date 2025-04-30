@@ -60,7 +60,16 @@ public class TypecheckerTest {
             
         assertEquals(personType, result);
     }    
-
+    @Test
+    public void testStringLiteralsTypechecking() throws TypecheckerErrorException{
+        Stmt stmt = new VardecStmt(new StringType(), "x");
+        Stmt assign = new AssignStmt(Optional.empty(), "x", new StrExp("something"));
+        Map<Variable, Type> map = new HashMap<Variable, Type>();
+        map.put(new Variable("x"), new StringType());
+        Map<Variable, Type> env = Typechecker.typecheckStmt(stmt, map, Optional.empty(), false, Optional.empty());
+        env = Typechecker.typecheckStmt(assign, env, Optional.empty(), false, Optional.empty());
+        assertEquals(map, env);                
+    }
     @Test
     public void testMethodCall() throws TypecheckerErrorException{
         ClassDef person = createPersonClass();
