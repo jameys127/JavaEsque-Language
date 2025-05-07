@@ -408,25 +408,40 @@ public class Typechecker {
         }
     }
     public static boolean stmtsReturnProperly(List<Stmt> stmts){
+        Boolean ifbody = true;
+        Boolean elsebody = true;
+        Boolean returnBool = null;
         for(Stmt stmt : stmts){
-            if(stmt instanceof ReturnStmt){
-                return true;
-            }else if(stmt instanceof IfStmt){
-                IfStmt ifstmt = (IfStmt)stmt;
-                boolean ifbody = stmtsReturnProperly(ifstmt.stmt());
+            if(stmt instanceof IfStmt ifstmt){
+                if(!(ifstmt.stmt().get(ifstmt.stmt().size() - 1) instanceof ReturnStmt)){
+                    ifbody = false;
+                }
                 if(ifstmt.elseStmt().isPresent()){
-                    boolean elsebody = stmtsReturnProperly(ifstmt.elseStmt().get());
-                    if(ifbody && elsebody){
-                        return true;
+                    if(!(ifstmt.elseStmt().get().get(ifstmt.elseStmt().get().size() - 1) instanceof ReturnStmt)){
+                        elsebody = false;
                     }
-                }else {
-                    if(ifbody){
-                        return true;
+                    if(ifbody ^ elsebody){
+                        returnBool = false;
+                    }else{
+                        returnBool = true;
                     }
                 }
             }
         }
-        return false;
+        if(!(stmts.get(stmts.size() - 1) instanceof ReturnStmt)){
+            if(returnBool != null && returnBool == true){
+                return true;
+            }
+            return false;
+        }else{
+            if(returnBool == null){
+                return true;
+            }else if(returnBool != null && returnBool == true){
+                return true;
+            }else{
+                return false;
+            }
+        }
     }
 
 /*                                    End MethodDef typechecking                               */

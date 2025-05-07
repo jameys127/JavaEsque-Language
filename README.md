@@ -59,7 +59,11 @@ mult_exp ::= call_exp ((`*` | `/`) call_exp)*
 
 add_exp ::= mult_exp ((`+` | `-`) mult_exp)*
 
-exp ::= add_exp
+bool_exp ::= add_exp (('<' | '<=' |
+                       '>' | '>=' |
+                       '==') add_exp)*
+
+exp ::= bool_exp
 
 vardec ::= type var
 
