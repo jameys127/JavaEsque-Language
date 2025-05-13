@@ -1,6 +1,24 @@
-int x;
-x = 1;
-while(x <= 10){
-    println(x);
-    x = x + 1;
+class Animal {
+    init() {}
+    method speak() void { return; }
 }
+class Cat extends Animal {
+    init() { super(); }
+    method speak() void { println("meow"); }
+    method meow(int x, int y) void { return println(1); }
+}
+class Mouse extends Cat {
+    init() { super(); }
+    method speak() void {println("squeek");}
+    method meow(int d, int f) void { int c; c = d + f; println(c); }
+    method squeak(int x, int y) void {return println(2); }
+}
+Animal animal;
+Animal cat;
+Cat mouse;
+animal = new Animal();
+cat = new Cat();
+mouse = new Mouse();
+cat.speak();
+mouse.speak();
+mouse.meow(5, 6);

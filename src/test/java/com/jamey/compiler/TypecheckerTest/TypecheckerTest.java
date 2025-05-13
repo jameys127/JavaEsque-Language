@@ -275,10 +275,12 @@ public class TypecheckerTest {
             }
             class Cat extends Animal {
               init() { super(); }
+              method speak() void { println("meow"); }
               method meow(int x, int y) void { return println(1); }
             }
             class Mouse extends Cat {
                 init() { super(); }
+                method speak() void {println("squeek");}
                 method meow(int d, int f) void { int c; c = d + f; println(c); }
                 method squeak(int x, int y) void {return println(2); }
             }
@@ -291,7 +293,6 @@ public class TypecheckerTest {
             cat.speak();
             mouse.speak();
             mouse.meow(5, 6);
-            mouse.squeak(1, 4);
             """;
     
         Tokenizer tokenizer = new Tokenizer(input);
@@ -314,9 +315,9 @@ public class TypecheckerTest {
                     method stuff() boolean {return this.stuff;}
                 }
                 Person person;
-                boolean trueOrFalse;
+                int numbers;
                 person = new Derek(2, false);
-                trueOrFalse = person.stuff();
+                numbers = person.speak();
                 """;
         Tokenizer tokenizer = new Tokenizer(input);
         ArrayList<Token> tokens = tokenizer.tokenize();

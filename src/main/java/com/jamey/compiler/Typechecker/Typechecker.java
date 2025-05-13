@@ -380,8 +380,7 @@ public class Typechecker {
         if(typeEnv.containsKey(variable)){
             final Type expected = typeEnv.get(variable);
             assertTypesEqual(expected, typecheckExp(stmt.e(), typeEnv, inClass));
-            Map<Variable, Type> newMap = addToMap(typeEnv, variable, typecheckExp(stmt.e(), typeEnv, inClass));
-            return newMap;
+            return typeEnv;
         }else {
             throw new TypecheckerErrorException("Variable not in scope: " + stmt.name());
         }
