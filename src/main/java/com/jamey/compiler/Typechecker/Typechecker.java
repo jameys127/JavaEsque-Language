@@ -348,6 +348,9 @@ public class Typechecker {
                                         throws TypecheckerErrorException{
         Variable variable = new Variable(stmt.name());
         Type type = stmt.type();
+        if(typeEnv.containsKey(variable)){
+            throw new TypecheckerErrorException("'" + variable.name() + "' has already been declared");
+        }
         return addToMap(typeEnv, variable, type);
     }
     public static Map<Variable, Type> typecheckWhile(final WhileStmt stmt,
