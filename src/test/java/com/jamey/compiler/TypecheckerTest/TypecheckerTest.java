@@ -227,6 +227,27 @@ public class TypecheckerTest {
         Typechecker.typecheckProgram(program);
     }
     @Test
+    public void testIfStatementReturningInMethod()throws TokenizerException, ParserException, TypecheckerErrorException{
+        String input = """
+                method methodname() int {
+                    int x;
+                    int y;
+                    x = 12;
+                    y = 5;
+                    if(x < y){
+                        return x;
+                    }
+                    println("stuuf");
+                    return y;
+                }
+                """;
+        Tokenizer tokenizer = new Tokenizer(input);
+        ArrayList<Token> tokens = tokenizer.tokenize();
+        Parser parser = new Parser(tokens);
+        ParseResult<MethodDef> methoddef = parser.parseMethodDef(0);
+        Typechecker.typecheckMethodDef(methoddef.result, inClass);
+    }
+    @Test
     public void testWhileLoop()throws TokenizerException, ParserException, TypecheckerErrorException{
         String input = """
                 boolean stuff;

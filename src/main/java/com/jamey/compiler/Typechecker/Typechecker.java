@@ -410,16 +410,13 @@ public class Typechecker {
     public static boolean stmtsReturnProperly(List<Stmt> stmts){
         Boolean ifbody = true;
         Boolean elsebody = true;
+        Boolean returnStmt = false;
         Boolean returnBool = null;
         for(Stmt stmt : stmts){
             if(stmt instanceof IfStmt ifstmt){
-                if(!(ifstmt.stmt().get(ifstmt.stmt().size() - 1) instanceof ReturnStmt)){
-                    ifbody = false;
-                }
+                ifbody = stmtsReturnProperly(ifstmt.stmt());
                 if(ifstmt.elseStmt().isPresent()){
-                    if(!(ifstmt.elseStmt().get().get(ifstmt.elseStmt().get().size() - 1) instanceof ReturnStmt)){
-                        elsebody = false;
-                    }
+                    elsebody = stmtsReturnProperly(ifstmt.elseStmt().get());
                     if(ifbody ^ elsebody){
                         returnBool = false;
                     }else{
@@ -427,8 +424,11 @@ public class Typechecker {
                     }
                 }
             }
+            if(stmt instanceof ReturnStmt){
+                returnStmt = true;
+            }
         }
-        if(!(stmts.get(stmts.size() - 1) instanceof ReturnStmt)){
+        if(!returnStmt){
             if(returnBool != null && returnBool == true){
                 return true;
             }
