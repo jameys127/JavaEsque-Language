@@ -1,28 +1,22 @@
 # Language Design Proposal: java-esque
 
-## Student Name(s):
+## Name:
 Jeremiah Sheehy
 
 ## Language Name:
-Java-esque
+JavaEsque
 
 ## Target Language:
 Javascript
 
 ## Language Description:
-(Pathetic) object-oriented programming.  The goal is for me to better understand how object-oriented programming languages work.  I want to implement a Java-like language with classes and subclasses. This is my solo attempt at a school team project that I did for my last semester in class. I want to attempt to add things that are missing in the original like string literals and maybe some other added bits and bobs. It compiles to javascript.
+(Pathetic) object-oriented programming.  The goal is for me to better understand how object-oriented programming languages work.  I want to implement a Java-like language with classes and subclasses. This is my solo attempt at a school team project that I did for my last semester in class. I want to attempt to add things that are missing in the original like string literals, return path validation, and maybe some other added bits and bobs. It compiles to javascript.
 
 ## Key Features:
 Objects + methods with class-based inheritance, subtyping, checking if a variable is initialized before use, checking if void is used as a value, checking that a function returning non-void always returns, non-S-expression-based syntax.
 
 ## Planned Restrictions: 
 No optimizations.
-
-## Suggested Scoring and Justification:
-- Lexer: 10%.  Only support for reserved words, identifiers, and integers.  No comments.
-- Parser: 20%.  Does not use S-expressions.
-- Typechecker: 40%.  Handles subtyping and method overloading, checking if a variable is initialized before use, checking if void is used as a value, checking that a function returning non-void always returns.
-- Code Generator: 30%.  Needs to work with JavaScript's prototype-based inheritance, which isn't quite one-to-one, but still pretty close.
 
 ## Concrete Syntax:
 - var is a variable
@@ -126,3 +120,4 @@ mvn exec:java -D"exec.mainClass"="com.jamey.compiler.Main.JavaEsque" -D"exec.arg
 ```
 - Replace 'name-of-file' with the name of the .jvsq file you put in "InputFiles"
 - Replace 'name-of-output-file' with whatever you want the JavaScript file to be called
+- After running the above command, you can run the output JavaScript file in Node.js
