@@ -94,15 +94,15 @@ Example (animals with a speak method):
 
 class Animal {
   init() {}
-  method speak() Void { return println(0); }
+  method speak() void { return println(0); }
 }
 class Cat extends Animal {
   init() { super(); }
-  method speak() Void { return println(1); }
+  method speak() void { return println(1); }
 }
 class Dog extends Animal {
   init() { super(); }
-  method speak() Void { return println(2); }
+  method speak() void { return println(2); }
 }
 
 Animal cat;
