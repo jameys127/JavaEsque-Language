@@ -1,10 +1,4 @@
-# Language Design Proposal: java-esque
-
-## Name:
-Jeremiah Sheehy
-
-## Language Name:
-JavaEsque
+# Java-Esque
 
 ## Target Language:
 Javascript
@@ -14,9 +8,6 @@ Javascript
 
 ## Key Features:
 Objects + methods with class-based inheritance, subtyping, checking if a variable is initialized before use, checking if void is used as a value, checking that a function returning non-void always returns, non-S-expression-based syntax.
-
-## Planned Restrictions: 
-No optimizations.
 
 ## Concrete Syntax:
 - var is a variable
