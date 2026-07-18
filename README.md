@@ -1,6 +1,6 @@
 # Java-Esque
 ## Website
-[Try it out on my website - javaesquecompiler.dev](javaesquecompiler.dev)
+[Try it out on my website - javaesquecompiler.dev](https://javaesquecompiler.dev)
 ## Target Language:
 Javascript
 
@@ -107,4 +107,4 @@ dog.speak();
 
 ## Running the Code ##
 You can test out my compiler at this website I created using react for the front end. It has a text editor where you can write your program, as well as a documentation section if you want to learn more about the syntax of this language.
-[Test it out here!](javaesquecompiler.dev)
+[Test it out here!](https://javaesquecompiler.dev)
