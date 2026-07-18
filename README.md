@@ -1,5 +1,6 @@
 # Java-Esque
-
+## Website
+[Try it out on my website - javaesquecompiler.dev](javaesquecompiler.dev)
 ## Target Language:
 Javascript
 
@@ -105,10 +106,5 @@ dog.speak();
 ```
 
 ## Running the Code ##
-Place your .jvsq file into 'InputFiles' in the 'examples' folder
-```console
-mvn exec:java -D"exec.mainClass"="com.jamey.compiler.Main.JavaEsque" -D"exec.args"="src/main/java/com/jamey/examples/InputFiles/name-of-file.jvsq src/main/java/com/jamey/examples/OutputFiles/name-of-output-file.js"
-```
-- Replace 'name-of-file' with the name of the .jvsq file you put in "InputFiles"
-- Replace 'name-of-output-file' with whatever you want the JavaScript file to be called
-- After running the above command, you can run the output JavaScript file in Node.js
+You can test out my compiler at this website I created using react for the front end. It has a text editor where you can write your program, as well as a documentation section if you want to learn more about the syntax of this language.
+[Test it out here!](javaesquecompiler.dev)
